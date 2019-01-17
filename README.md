@@ -1,7 +1,7 @@
 Elastos Hive IPFS
 ==============
 [![](https://img.shields.io/badge/made%20by-Elastos%20org-blue.svg?style=flat-square)](http://elastos.org)
-[![](https://img.shields.io/badge/project-Hive IPFS-blue.svg?style=flat-square)](http://elastos.org/)
+[![](https://img.shields.io/badge/project-Hive-blue.svg?style=flat-square)](http://elastos.org/)
 [![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 [![Build Status](https://travis-ci.org/elastos/Elastos.NET.Hive.IPFS.svg?branch=master)](https://travis-ci.org/elastos/Elastos.NET.Hive.IPFS)
 
