@@ -12,9 +12,9 @@ import (
 
 	"context"
 
-	core "github.com/ipfs/go-ipfs/core"
-	ipns "github.com/ipfs/go-ipfs/fuse/ipns"
-	mount "github.com/ipfs/go-ipfs/fuse/mount"
+	core "github.com/elastos/Elastos.NET.Hive.IPFS/core"
+	ipns "github.com/elastos/Elastos.NET.Hive.IPFS/fuse/ipns"
+	mount "github.com/elastos/Elastos.NET.Hive.IPFS/fuse/mount"
 
 	ci "github.com/libp2p/go-testutil/ci"
 )

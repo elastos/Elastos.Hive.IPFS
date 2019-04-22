@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	core "github.com/ipfs/go-ipfs/core"
-	coreapi "github.com/ipfs/go-ipfs/core/coreapi"
-	loader "github.com/ipfs/go-ipfs/plugin/loader"
+	core "github.com/elastos/Elastos.NET.Hive.IPFS/core"
+	coreapi "github.com/elastos/Elastos.NET.Hive.IPFS/core/coreapi"
+	loader "github.com/elastos/Elastos.NET.Hive.IPFS/plugin/loader"
 
 	"github.com/ipfs/go-ipfs-cmds"
 	config "github.com/ipfs/go-ipfs-config"

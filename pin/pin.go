@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ipfs/go-ipfs/dagutils"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/dagutils"
 	mdag "github.com/ipfs/go-merkledag"
 
 	cid "github.com/ipfs/go-cid"

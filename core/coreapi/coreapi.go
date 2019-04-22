@@ -18,11 +18,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ipfs/go-ipfs/core"
-	"github.com/ipfs/go-ipfs/namesys"
-	"github.com/ipfs/go-ipfs/pin"
-	"github.com/ipfs/go-ipfs/provider"
-	"github.com/ipfs/go-ipfs/repo"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/core"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/namesys"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/pin"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/provider"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/repo"
 
 	bserv "github.com/ipfs/go-blockservice"
 	"github.com/ipfs/go-ipfs-blockstore"

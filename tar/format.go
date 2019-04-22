@@ -8,7 +8,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/ipfs/go-ipfs/dagutils"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/dagutils"
 	dag "github.com/ipfs/go-merkledag"
 	path "github.com/ipfs/go-path"
 	importer "github.com/ipfs/go-unixfs/importer"

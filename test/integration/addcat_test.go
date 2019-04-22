@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ipfs/go-ipfs/core"
-	"github.com/ipfs/go-ipfs/core/coreapi"
-	mock "github.com/ipfs/go-ipfs/core/mock"
-	"github.com/ipfs/go-ipfs/thirdparty/unit"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/core"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/core/coreapi"
+	mock "github.com/elastos/Elastos.NET.Hive.IPFS/core/mock"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/thirdparty/unit"
 
 	files "github.com/ipfs/go-ipfs-files"
 	logging "github.com/ipfs/go-log"

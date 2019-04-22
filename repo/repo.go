@@ -4,8 +4,8 @@ import (
 	"errors"
 	"io"
 
-	filestore "github.com/ipfs/go-ipfs/filestore"
-	keystore "github.com/ipfs/go-ipfs/keystore"
+	filestore "github.com/elastos/Elastos.NET.Hive.IPFS/filestore"
+	keystore "github.com/elastos/Elastos.NET.Hive.IPFS/keystore"
 
 	ds "github.com/ipfs/go-datastore"
 	config "github.com/ipfs/go-ipfs-config"

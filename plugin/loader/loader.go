@@ -5,9 +5,9 @@ import (
 	"os"
 	"strings"
 
-	coredag "github.com/ipfs/go-ipfs/core/coredag"
-	plugin "github.com/ipfs/go-ipfs/plugin"
-	fsrepo "github.com/ipfs/go-ipfs/repo/fsrepo"
+	coredag "github.com/elastos/Elastos.NET.Hive.IPFS/core/coredag"
+	plugin "github.com/elastos/Elastos.NET.Hive.IPFS/plugin"
+	fsrepo "github.com/elastos/Elastos.NET.Hive.IPFS/repo/fsrepo"
 
 	ipld "github.com/ipfs/go-ipld-format"
 	logging "github.com/ipfs/go-log"

@@ -6,9 +6,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/ipfs/go-ipfs/core"
-	gc "github.com/ipfs/go-ipfs/pin/gc"
-	repo "github.com/ipfs/go-ipfs/repo"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/core"
+	gc "github.com/elastos/Elastos.NET.Hive.IPFS/pin/gc"
+	repo "github.com/elastos/Elastos.NET.Hive.IPFS/repo"
 
 	humanize "github.com/dustin/go-humanize"
 	cid "github.com/ipfs/go-cid"

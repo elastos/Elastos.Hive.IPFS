@@ -8,7 +8,7 @@ import (
 	gopath "path"
 	"strconv"
 
-	"github.com/ipfs/go-ipfs/pin"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/pin"
 
 	"github.com/ipfs/go-cid"
 	bstore "github.com/ipfs/go-ipfs-blockstore"

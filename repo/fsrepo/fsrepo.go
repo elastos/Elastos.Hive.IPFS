@@ -11,12 +11,12 @@ import (
 	"strings"
 	"sync"
 
-	filestore "github.com/ipfs/go-ipfs/filestore"
-	keystore "github.com/ipfs/go-ipfs/keystore"
-	repo "github.com/ipfs/go-ipfs/repo"
-	"github.com/ipfs/go-ipfs/repo/common"
-	mfsr "github.com/ipfs/go-ipfs/repo/fsrepo/migrations"
-	dir "github.com/ipfs/go-ipfs/thirdparty/dir"
+	filestore "github.com/elastos/Elastos.NET.Hive.IPFS/filestore"
+	keystore "github.com/elastos/Elastos.NET.Hive.IPFS/keystore"
+	repo "github.com/elastos/Elastos.NET.Hive.IPFS/repo"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/repo/common"
+	mfsr "github.com/elastos/Elastos.NET.Hive.IPFS/repo/fsrepo/migrations"
+	dir "github.com/elastos/Elastos.NET.Hive.IPFS/thirdparty/dir"
 
 	ds "github.com/ipfs/go-datastore"
 	measure "github.com/ipfs/go-ds-measure"
@@ -403,7 +403,7 @@ func (r *FSRepo) openDatastore() error {
 		return fmt.Errorf("required Datastore.Spec entry missing from config file")
 	}
 	if r.config.Datastore.NoSync {
-		log.Warning("NoSync is now deprecated in favor of datastore specific settings. If you want to disable fsync on flatfs set 'sync' to false. See https://github.com/ipfs/go-ipfs/blob/master/docs/datastores.md#flatfs.")
+		log.Warning("NoSync is now deprecated in favor of datastore specific settings. If you want to disable fsync on flatfs set 'sync' to false. See https://github.com/elastos/Elastos.NET.Hive.IPFS/blob/master/docs/datastores.md#flatfs.")
 	}
 
 	dsc, err := AnyDatastoreConfig(r.config.Datastore.Spec)

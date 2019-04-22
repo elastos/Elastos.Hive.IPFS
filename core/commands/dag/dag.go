@@ -6,8 +6,8 @@ import (
 	"math"
 	"strings"
 
-	"github.com/ipfs/go-ipfs/core/commands/cmdenv"
-	"github.com/ipfs/go-ipfs/core/coredag"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/core/commands/cmdenv"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/core/coredag"
 
 	cid "github.com/ipfs/go-cid"
 	cidenc "github.com/ipfs/go-cidutil/cidenc"

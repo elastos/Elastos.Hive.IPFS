@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ipfs/go-ipfs/thirdparty/assert"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/thirdparty/assert"
 
 	protocol "github.com/libp2p/go-libp2p-protocol"
 )

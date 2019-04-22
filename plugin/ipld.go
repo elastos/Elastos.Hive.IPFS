@@ -1,7 +1,7 @@
 package plugin
 
 import (
-	"github.com/ipfs/go-ipfs/core/coredag"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/core/coredag"
 
 	ipld "github.com/ipfs/go-ipld-format"
 )

@@ -18,9 +18,9 @@ import (
 
 	"bazil.org/fuse"
 
-	core "github.com/ipfs/go-ipfs/core"
-	coreapi "github.com/ipfs/go-ipfs/core/coreapi"
-	coremock "github.com/ipfs/go-ipfs/core/mock"
+	core "github.com/elastos/Elastos.NET.Hive.IPFS/core"
+	coreapi "github.com/elastos/Elastos.NET.Hive.IPFS/core/coreapi"
+	coremock "github.com/elastos/Elastos.NET.Hive.IPFS/core/mock"
 
 	fstest "bazil.org/fuse/fs/fstestutil"
 	chunker "github.com/ipfs/go-ipfs-chunker"

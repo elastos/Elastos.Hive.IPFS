@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	keystore "github.com/ipfs/go-ipfs/keystore"
-	namesys "github.com/ipfs/go-ipfs/namesys"
+	keystore "github.com/elastos/Elastos.NET.Hive.IPFS/keystore"
+	namesys "github.com/elastos/Elastos.NET.Hive.IPFS/namesys"
 	path "github.com/ipfs/go-path"
 
 	proto "github.com/gogo/protobuf/proto"

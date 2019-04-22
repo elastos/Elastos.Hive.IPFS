@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ipfs/go-ipfs/core"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/core"
 
-	"github.com/ipfs/go-ipfs/core/coreunix"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/core/coreunix"
 
 	blockservice "github.com/ipfs/go-blockservice"
 	cid "github.com/ipfs/go-cid"

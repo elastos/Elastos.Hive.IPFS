@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ipfs/go-ipfs/commands"
-	"github.com/ipfs/go-ipfs/core"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/commands"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/core"
 
 	cmds "github.com/ipfs/go-ipfs-cmds"
 	config "github.com/ipfs/go-ipfs-config"

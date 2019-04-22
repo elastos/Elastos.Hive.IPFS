@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	commands "github.com/ipfs/go-ipfs/core/commands"
+	commands "github.com/elastos/Elastos.NET.Hive.IPFS/core/commands"
 
 	cmds "github.com/ipfs/go-ipfs-cmds"
 )

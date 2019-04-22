@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ipfs/go-ipfs/keystore"
-	"github.com/ipfs/go-ipfs/namesys"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/keystore"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/namesys"
 
 	ipath "github.com/ipfs/go-path"
 	coreiface "github.com/ipfs/interface-go-ipfs-core"

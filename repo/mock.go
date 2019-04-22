@@ -3,8 +3,8 @@ package repo
 import (
 	"errors"
 
-	filestore "github.com/ipfs/go-ipfs/filestore"
-	keystore "github.com/ipfs/go-ipfs/keystore"
+	filestore "github.com/elastos/Elastos.NET.Hive.IPFS/filestore"
+	keystore "github.com/elastos/Elastos.NET.Hive.IPFS/keystore"
 
 	config "github.com/ipfs/go-ipfs-config"
 	ma "github.com/multiformats/go-multiaddr"

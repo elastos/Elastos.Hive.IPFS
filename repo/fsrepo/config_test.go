@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/ipfs/go-ipfs/plugin/loader"
-	"github.com/ipfs/go-ipfs/repo/fsrepo"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/plugin/loader"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/repo/fsrepo"
 
 	"github.com/ipfs/go-ipfs-config"
 )

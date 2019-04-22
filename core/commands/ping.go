@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ipfs/go-ipfs/core/commands/cmdenv"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/core/commands/cmdenv"
 
 	iaddr "github.com/ipfs/go-ipfs-addr"
 	cmdkit "github.com/ipfs/go-ipfs-cmdkit"

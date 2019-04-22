@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/ipfs/go-block-format"
-	"github.com/ipfs/go-ipfs/core"
-	"github.com/ipfs/go-ipfs/core/mock"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/core"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/core/mock"
 
 	cid "github.com/ipfs/go-cid"
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"

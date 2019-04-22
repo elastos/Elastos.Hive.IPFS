@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"text/tabwriter"
 
-	"github.com/ipfs/go-ipfs/core/commands/cmdenv"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/core/commands/cmdenv"
 
 	"github.com/ipfs/go-cid"
 	"github.com/ipfs/go-ipfs-cmdkit"

@@ -11,8 +11,8 @@ import (
 	"io"
 	"os"
 
-	core "github.com/ipfs/go-ipfs/core"
-	namesys "github.com/ipfs/go-ipfs/namesys"
+	core "github.com/elastos/Elastos.NET.Hive.IPFS/core"
+	namesys "github.com/elastos/Elastos.NET.Hive.IPFS/namesys"
 	dag "github.com/ipfs/go-merkledag"
 	path "github.com/ipfs/go-path"
 	ft "github.com/ipfs/go-unixfs"

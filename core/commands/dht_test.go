@@ -3,7 +3,7 @@ package commands
 import (
 	"testing"
 
-	"github.com/ipfs/go-ipfs/namesys"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/namesys"
 
 	ipns "github.com/ipfs/go-ipns"
 	tu "github.com/libp2p/go-testutil"

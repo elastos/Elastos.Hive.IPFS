@@ -8,13 +8,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ipfs/go-ipfs/filestore"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/filestore"
 
-	"github.com/ipfs/go-ipfs/core"
-	"github.com/ipfs/go-ipfs/core/coreapi"
-	mock "github.com/ipfs/go-ipfs/core/mock"
-	"github.com/ipfs/go-ipfs/keystore"
-	"github.com/ipfs/go-ipfs/repo"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/core"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/core/coreapi"
+	mock "github.com/elastos/Elastos.NET.Hive.IPFS/core/mock"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/keystore"
+	"github.com/elastos/Elastos.NET.Hive.IPFS/repo"
 
 	"github.com/ipfs/go-datastore"
 	syncds "github.com/ipfs/go-datastore/sync"

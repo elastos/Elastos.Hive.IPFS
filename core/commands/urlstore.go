@@ -5,9 +5,9 @@ import (
 	"io"
 	"net/http"
 
-	cmdenv "github.com/ipfs/go-ipfs/core/commands/cmdenv"
-	filestore "github.com/ipfs/go-ipfs/filestore"
-	pin "github.com/ipfs/go-ipfs/pin"
+	cmdenv "github.com/elastos/Elastos.NET.Hive.IPFS/core/commands/cmdenv"
+	filestore "github.com/elastos/Elastos.NET.Hive.IPFS/filestore"
+	pin "github.com/elastos/Elastos.NET.Hive.IPFS/pin"
 
 	cid "github.com/ipfs/go-cid"
 	chunk "github.com/ipfs/go-ipfs-chunker"
