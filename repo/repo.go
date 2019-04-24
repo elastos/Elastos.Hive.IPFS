@@ -8,7 +8,7 @@ import (
 	keystore "github.com/elastos/Elastos.NET.Hive.IPFS/keystore"
 
 	ds "github.com/ipfs/go-datastore"
-	config "github.com/ipfs/go-ipfs-config"
+	config "github.com/elastos/go-ipfs-config"
 	ma "github.com/multiformats/go-multiaddr"
 )
 

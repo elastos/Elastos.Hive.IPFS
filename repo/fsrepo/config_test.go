@@ -10,7 +10,7 @@ import (
 	"github.com/elastos/Elastos.NET.Hive.IPFS/plugin/loader"
 	"github.com/elastos/Elastos.NET.Hive.IPFS/repo/fsrepo"
 
-	"github.com/ipfs/go-ipfs-config"
+	"github.com/elastos/go-ipfs-config"
 )
 
 // note: to test sorting of the mountpoints in the disk spec they are

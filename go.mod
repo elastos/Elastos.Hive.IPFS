@@ -8,6 +8,8 @@ require (
 	github.com/bren2010/proquint v0.0.0-20160323162903-38337c27106d
 	github.com/cenkalti/backoff v2.1.1+incompatible
 	github.com/dustin/go-humanize v1.0.0
+	github.com/elastos/go-ipfs-config v0.0.1-hive
+	github.com/elastos/go-ipns v0.0.1
 	github.com/elgris/jsondiff v0.0.0-20160530203242-765b5c24c302
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/gogo/protobuf v1.2.1
@@ -34,7 +36,6 @@ require (
 	github.com/ipfs/go-ipfs-chunker v0.0.1
 	github.com/ipfs/go-ipfs-cmdkit v0.0.1
 	github.com/ipfs/go-ipfs-cmds v0.0.5
-	github.com/ipfs/go-ipfs-config v0.0.1
 	github.com/ipfs/go-ipfs-ds-help v0.0.1
 	github.com/ipfs/go-ipfs-exchange-interface v0.0.1
 	github.com/ipfs/go-ipfs-exchange-offline v0.0.1
@@ -110,5 +111,9 @@ require (
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
 	gotest.tools/gotestsum v0.3.3
 )
+
+replace github.com/elastos/go-ipfs-config => ../go-ipfs-config
+
+replace github.com/elastos/go-ipns => ../go-ipns
 
 go 1.12

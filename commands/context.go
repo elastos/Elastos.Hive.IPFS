@@ -11,7 +11,7 @@ import (
 	loader "github.com/elastos/Elastos.NET.Hive.IPFS/plugin/loader"
 
 	"github.com/ipfs/go-ipfs-cmds"
-	config "github.com/ipfs/go-ipfs-config"
+	config "github.com/elastos/go-ipfs-config"
 	logging "github.com/ipfs/go-log"
 	coreiface "github.com/ipfs/interface-go-ipfs-core"
 	options "github.com/ipfs/interface-go-ipfs-core/options"

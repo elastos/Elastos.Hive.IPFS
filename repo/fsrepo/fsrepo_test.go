@@ -10,7 +10,7 @@ import (
 	"github.com/elastos/Elastos.NET.Hive.IPFS/thirdparty/assert"
 
 	datastore "github.com/ipfs/go-datastore"
-	config "github.com/ipfs/go-ipfs-config"
+	config "github.com/elastos/go-ipfs-config"
 )
 
 // swap arg order

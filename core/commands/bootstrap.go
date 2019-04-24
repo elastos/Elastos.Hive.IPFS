@@ -11,7 +11,7 @@ import (
 
 	cmdkit "github.com/ipfs/go-ipfs-cmdkit"
 	cmds "github.com/ipfs/go-ipfs-cmds"
-	config "github.com/ipfs/go-ipfs-config"
+	config "github.com/elastos/go-ipfs-config"
 )
 
 type BootstrapOutput struct {
