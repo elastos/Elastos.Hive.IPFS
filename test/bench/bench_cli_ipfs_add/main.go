@@ -12,7 +12,7 @@ import (
 
 	"github.com/elastos/Elastos.NET.Hive.IPFS/thirdparty/unit"
 
-	config "github.com/elastos/go-ipfs-config"
+	config "github.com/elastos/Elastos.NET.Hive.IPFS.Config"
 	random "github.com/jbenet/go-random"
 )
 

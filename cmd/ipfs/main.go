@@ -25,7 +25,7 @@ import (
 	"github.com/ipfs/go-ipfs-cmds"
 	"github.com/ipfs/go-ipfs-cmds/cli"
 	"github.com/ipfs/go-ipfs-cmds/http"
-	"github.com/elastos/go-ipfs-config"
+	"github.com/elastos/Elastos.NET.Hive.IPFS.Config"
 	u "github.com/ipfs/go-ipfs-util"
 	logging "github.com/ipfs/go-log"
 	loggables "github.com/libp2p/go-libp2p-loggables"

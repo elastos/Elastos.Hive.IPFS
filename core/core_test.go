@@ -9,7 +9,7 @@ import (
 
 	datastore "github.com/ipfs/go-datastore"
 	syncds "github.com/ipfs/go-datastore/sync"
-	config "github.com/elastos/go-ipfs-config"
+	config "github.com/elastos/Elastos.NET.Hive.IPFS.Config"
 )
 
 func TestInitialization(t *testing.T) {

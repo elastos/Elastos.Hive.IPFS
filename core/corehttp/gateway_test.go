@@ -18,7 +18,7 @@ import (
 
 	datastore "github.com/ipfs/go-datastore"
 	syncds "github.com/ipfs/go-datastore/sync"
-	config "github.com/elastos/go-ipfs-config"
+	config "github.com/elastos/Elastos.NET.Hive.IPFS.Config"
 	files "github.com/ipfs/go-ipfs-files"
 	path "github.com/ipfs/go-path"
 	iface "github.com/ipfs/interface-go-ipfs-core"

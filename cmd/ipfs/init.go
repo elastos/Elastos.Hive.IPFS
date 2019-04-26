@@ -18,7 +18,7 @@ import (
 
 	"github.com/ipfs/go-ipfs-cmdkit"
 	"github.com/ipfs/go-ipfs-cmds"
-	"github.com/elastos/go-ipfs-config"
+	"github.com/elastos/Elastos.NET.Hive.IPFS.Config"
 	"github.com/ipfs/go-ipfs-files"
 )
 

@@ -3,7 +3,7 @@ package fsrepo
 import (
 	"os"
 
-	config "github.com/elastos/go-ipfs-config"
+	config "github.com/elastos/Elastos.NET.Hive.IPFS.Config"
 	homedir "github.com/mitchellh/go-homedir"
 )
 

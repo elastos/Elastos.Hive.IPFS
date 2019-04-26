@@ -12,7 +12,7 @@ import (
 	math2 "github.com/elastos/Elastos.NET.Hive.IPFS/thirdparty/math2"
 	lgbl "github.com/libp2p/go-libp2p-loggables"
 
-	config "github.com/elastos/go-ipfs-config"
+	config "github.com/elastos/Elastos.NET.Hive.IPFS.Config"
 	goprocess "github.com/jbenet/goprocess"
 	procctx "github.com/jbenet/goprocess/context"
 	periodicproc "github.com/jbenet/goprocess/periodic"

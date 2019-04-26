@@ -21,7 +21,7 @@ import (
 	bstore "github.com/ipfs/go-ipfs-blockstore"
 	cmdkit "github.com/ipfs/go-ipfs-cmdkit"
 	cmds "github.com/ipfs/go-ipfs-cmds"
-	config "github.com/elastos/go-ipfs-config"
+	config "github.com/elastos/Elastos.NET.Hive.IPFS.Config"
 )
 
 type RepoVersion struct {

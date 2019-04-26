@@ -16,7 +16,7 @@ import (
 	fsrepo "github.com/elastos/Elastos.NET.Hive.IPFS/repo/fsrepo"
 
 	fsnotify "github.com/fsnotify/fsnotify"
-	config "github.com/elastos/go-ipfs-config"
+	config "github.com/elastos/Elastos.NET.Hive.IPFS.Config"
 	files "github.com/ipfs/go-ipfs-files"
 	process "github.com/jbenet/goprocess"
 	homedir "github.com/mitchellh/go-homedir"

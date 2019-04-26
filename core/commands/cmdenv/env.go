@@ -8,7 +8,7 @@ import (
 	"github.com/elastos/Elastos.NET.Hive.IPFS/core"
 
 	cmds "github.com/ipfs/go-ipfs-cmds"
-	config "github.com/elastos/go-ipfs-config"
+	config "github.com/elastos/Elastos.NET.Hive.IPFS.Config"
 	logging "github.com/ipfs/go-log"
 	coreiface "github.com/ipfs/interface-go-ipfs-core"
 	options "github.com/ipfs/interface-go-ipfs-core/options"

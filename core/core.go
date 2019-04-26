@@ -37,7 +37,7 @@ import (
 	cid "github.com/ipfs/go-cid"
 	ds "github.com/ipfs/go-datastore"
 	bstore "github.com/ipfs/go-ipfs-blockstore"
-	config "github.com/elastos/go-ipfs-config"
+	config "github.com/elastos/Elastos.NET.Hive.IPFS.Config"
 	exchange "github.com/ipfs/go-ipfs-exchange-interface"
 	nilrouting "github.com/ipfs/go-ipfs-routing/none"
 	u "github.com/ipfs/go-ipfs-util"
