@@ -13,17 +13,17 @@ import (
 
 	core "github.com/elastos/Elastos.NET.Hive.IPFS/core"
 	namesys "github.com/elastos/Elastos.NET.Hive.IPFS/namesys"
-	dag "gx/ipfs/QmSei8kFMfqdJq7Q68d2LMnHbTWKKg2daA29ezUYFAUNgc/go-merkledag"
-	path "gx/ipfs/QmT3rzed1ppXefourpmoZ7tyVQfsGPQZ1pHDngLmCvXxd3/go-path"
-	ft "gx/ipfs/QmfB3oNXGGq9S4B2a9YeCajoATms3Zw2VvDm8fK7VeLSV8/go-unixfs"
+	dag "github.com/ipfs/go-merkledag"
+	path "github.com/ipfs/go-path"
+	ft "github.com/ipfs/go-unixfs"
 
-	cid "gx/ipfs/QmPSQnBKM9g7BaUcZCvswUJVscQ1ipjmwxN5PXCjkp9EQ7/go-cid"
-	ci "gx/ipfs/QmPvyPwuCgJ7pDmrKDxRtsScJgBaM5h4EpRL2qQJsmXf4n/go-libp2p-crypto"
-	fuse "gx/ipfs/QmSJBsmLP1XMjv8hxYg2rUMdPDB7YUpyBo9idjrJ6Cmq6F/fuse"
-	fs "gx/ipfs/QmSJBsmLP1XMjv8hxYg2rUMdPDB7YUpyBo9idjrJ6Cmq6F/fuse/fs"
-	peer "gx/ipfs/QmTRhk7cgjUf2gfQ3p2M9KPECNZEW9XUrmHcFCgog4cPgB/go-libp2p-peer"
-	mfs "gx/ipfs/QmUwXQs8aZ472DmXZ8uJNf7HJNKoMJQVa7RaCz7ujZ3ua9/go-mfs"
-	logging "gx/ipfs/QmZChCsSt8DctjceaL56Eibc29CVQq4dGKRXC5JRZ6Ppae/go-log"
+	fuse "bazil.org/fuse"
+	fs "bazil.org/fuse/fs"
+	cid "github.com/ipfs/go-cid"
+	logging "github.com/ipfs/go-log"
+	mfs "github.com/ipfs/go-mfs"
+	ci "github.com/libp2p/go-libp2p-crypto"
+	peer "github.com/libp2p/go-libp2p-peer"
 )
 
 func init() {
@@ -402,12 +402,13 @@ func (fi *File) Setattr(ctx context.Context, req *fuse.SetattrRequest, resp *fus
 	return nil
 }
 
-// Fsync flushes the content in the file to disk, but does not
-// update the dag tree internally
+// Fsync flushes the content in the file to disk.
 func (fi *FileNode) Fsync(ctx context.Context, req *fuse.FsyncRequest) error {
+	// This needs to perform a *full* flush because, in MFS, a write isn't
+	// persisted until the root is updated.
 	errs := make(chan error, 1)
 	go func() {
-		errs <- fi.fi.Sync()
+		errs <- fi.fi.Flush()
 	}()
 	select {
 	case err := <-errs:
@@ -418,7 +419,8 @@ func (fi *FileNode) Fsync(ctx context.Context, req *fuse.FsyncRequest) error {
 }
 
 func (fi *File) Forget() {
-	err := fi.fi.Sync()
+	// TODO(steb): this seems like a place where we should be *uncaching*, not flushing.
+	err := fi.fi.Flush()
 	if err != nil {
 		log.Debug("forget file error: ", err)
 	}
@@ -434,19 +436,11 @@ func (dir *Directory) Mkdir(ctx context.Context, req *fuse.MkdirRequest) (fs.Nod
 }
 
 func (fi *FileNode) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.OpenResponse) (fs.Handle, error) {
-	var mfsflag int
-	switch {
-	case req.Flags.IsReadOnly():
-		mfsflag = mfs.OpenReadOnly
-	case req.Flags.IsWriteOnly():
-		mfsflag = mfs.OpenWriteOnly
-	case req.Flags.IsReadWrite():
-		mfsflag = mfs.OpenReadWrite
-	default:
-		return nil, errors.New("unsupported flag type")
-	}
-
-	fd, err := fi.fi.Open(mfsflag, true)
+	fd, err := fi.fi.Open(mfs.Flags{
+		Read:  req.Flags.IsReadOnly() || req.Flags.IsReadWrite(),
+		Write: req.Flags.IsWriteOnly() || req.Flags.IsReadWrite(),
+		Sync:  true,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -502,19 +496,11 @@ func (dir *Directory) Create(ctx context.Context, req *fuse.CreateRequest, resp 
 
 	nodechild := &FileNode{fi: fi}
 
-	var openflag int
-	switch {
-	case req.Flags.IsReadOnly():
-		openflag = mfs.OpenReadOnly
-	case req.Flags.IsWriteOnly():
-		openflag = mfs.OpenWriteOnly
-	case req.Flags.IsReadWrite():
-		openflag = mfs.OpenReadWrite
-	default:
-		return nil, nil, errors.New("unsupported open mode")
-	}
-
-	fd, err := fi.Open(openflag, true)
+	fd, err := fi.Open(mfs.Flags{
+		Read:  req.Flags.IsReadOnly() || req.Flags.IsReadWrite(),
+		Write: req.Flags.IsWriteOnly() || req.Flags.IsReadWrite(),
+		Sync:  true,
+	})
 	if err != nil {
 		return nil, nil, err
 	}

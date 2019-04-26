@@ -13,16 +13,15 @@ import (
 
 	"github.com/elastos/Elastos.NET.Hive.IPFS/core"
 	"github.com/elastos/Elastos.NET.Hive.IPFS/core/coreapi"
-	"github.com/elastos/Elastos.NET.Hive.IPFS/core/coreapi/interface"
-	coreunix "github.com/elastos/Elastos.NET.Hive.IPFS/core/coreunix"
 	mock "github.com/elastos/Elastos.NET.Hive.IPFS/core/mock"
 	"github.com/elastos/Elastos.NET.Hive.IPFS/thirdparty/unit"
 
-	random "gx/ipfs/QmSJ9n2s9NUoA9D849W5jj5SJ94nMcZpj1jCgQJieiNqSt/go-random"
-	pstore "gx/ipfs/QmTTJcDL3gsnGDALjh2fDGg1onGRUdVgNL2hU2WEZcVrMX/go-libp2p-peerstore"
-	mocknet "gx/ipfs/QmUDTcnDp2WssbmiDLC6aYurUeyt7QeRakHUQMxA2mZ5iB/go-libp2p/p2p/net/mock"
-	logging "gx/ipfs/QmZChCsSt8DctjceaL56Eibc29CVQq4dGKRXC5JRZ6Ppae/go-log"
-	testutil "gx/ipfs/Qma6ESRQTf1ZLPgzpCwDTqQJefPnU6uLvMjP18vK8EWp8L/go-testutil"
+	files "github.com/ipfs/go-ipfs-files"
+	logging "github.com/ipfs/go-log"
+	random "github.com/jbenet/go-random"
+	pstore "github.com/libp2p/go-libp2p-peerstore"
+	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
+	testutil "github.com/libp2p/go-testutil"
 )
 
 var log = logging.Logger("epictest")
@@ -85,8 +84,11 @@ func AddCatPowers(conf testutil.LatencyConfig, megabytesMax int64) error {
 }
 
 func RandomBytes(n int64) []byte {
-	data := new(bytes.Buffer)
-	random.WritePseudoRandomBytes(n, data, kSeed)
+	var data bytes.Buffer
+	err := random.WritePseudoRandomBytes(n, &data, kSeed)
+	if err != nil {
+		panic(err)
+	}
 	return data.Bytes()
 }
 
@@ -120,7 +122,15 @@ func DirectAddCat(data []byte, conf testutil.LatencyConfig) error {
 	}
 	defer catter.Close()
 
-	catterApi := coreapi.NewCoreAPI(catter)
+	adderApi, err := coreapi.NewCoreAPI(adder)
+	if err != nil {
+		return err
+	}
+
+	catterApi, err := coreapi.NewCoreAPI(catter)
+	if err != nil {
+		return err
+	}
 
 	err = mn.LinkAll()
 	if err != nil {
@@ -137,29 +147,26 @@ func DirectAddCat(data []byte, conf testutil.LatencyConfig) error {
 		return err
 	}
 
-	added, err := coreunix.Add(adder, bytes.NewReader(data))
+	added, err := adderApi.Unixfs().Add(ctx, files.NewBytesFile(data))
 	if err != nil {
 		return err
 	}
 
-	ap, err := iface.ParsePath(added)
-	if err != nil {
-		return err
-	}
-
-	readerCatted, err := catterApi.Unixfs().Get(ctx, ap)
+	readerCatted, err := catterApi.Unixfs().Get(ctx, added)
 	if err != nil {
 		return err
 	}
 
 	// verify
-	bufout := new(bytes.Buffer)
-	io.Copy(bufout, readerCatted)
-	if 0 != bytes.Compare(bufout.Bytes(), data) {
+	var bufout bytes.Buffer
+	_, err = io.Copy(&bufout, readerCatted.(io.Reader))
+	if err != nil {
+		return err
+	}
+	if !bytes.Equal(bufout.Bytes(), data) {
 		return errors.New("catted data does not match added data")
 	}
 
-	cancel()
 	return nil
 }
 

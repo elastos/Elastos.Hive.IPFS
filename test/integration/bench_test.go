@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/elastos/Elastos.NET.Hive.IPFS/thirdparty/unit"
-	testutil "gx/ipfs/Qma6ESRQTf1ZLPgzpCwDTqQJefPnU6uLvMjP18vK8EWp8L/go-testutil"
+	testutil "github.com/libp2p/go-testutil"
 )
 
 func benchmarkAddCat(numBytes int64, conf testutil.LatencyConfig, b *testing.B) {

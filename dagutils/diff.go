@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"path"
 
-	coreiface "github.com/elastos/Elastos.NET.Hive.IPFS/core/coreapi/interface"
-
-	"gx/ipfs/QmPSQnBKM9g7BaUcZCvswUJVscQ1ipjmwxN5PXCjkp9EQ7/go-cid"
-	ipld "gx/ipfs/QmR7TcHkR9nxkUorfi8XMTAMLUK7GiP64TWWBzY3aacc1o/go-ipld-format"
-	dag "gx/ipfs/QmSei8kFMfqdJq7Q68d2LMnHbTWKKg2daA29ezUYFAUNgc/go-merkledag"
+	"github.com/ipfs/go-cid"
+	ipld "github.com/ipfs/go-ipld-format"
+	dag "github.com/ipfs/go-merkledag"
+	coreiface "github.com/ipfs/interface-go-ipfs-core"
 )
 
 // These constants define the changes that can be applied to a DAG.
@@ -140,8 +139,8 @@ func Diff(ctx context.Context, ds ipld.DAGService, a, b ipld.Node) ([]*Change, e
 					out = append(out, subc)
 				}
 			}
-			cleanA.RemoveNodeLink(l.Name)
-			cleanB.RemoveNodeLink(l.Name)
+			_ = cleanA.RemoveNodeLink(l.Name)
+			_ = cleanB.RemoveNodeLink(l.Name)
 		}
 	}
 

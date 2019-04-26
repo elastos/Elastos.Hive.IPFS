@@ -12,8 +12,8 @@ import (
 
 	"github.com/elastos/Elastos.NET.Hive.IPFS/thirdparty/unit"
 
-	random "gx/ipfs/QmSJ9n2s9NUoA9D849W5jj5SJ94nMcZpj1jCgQJieiNqSt/go-random"
-	config "gx/ipfs/QmVFZsFtfRgn6hxEAyW5rDiuUYPpiCML4XHtz1p7LDsdon/go-ipfs-config"
+	config "github.com/elastos/Elastos.NET.Hive.IPFS.Config"
+	random "github.com/jbenet/go-random"
 )
 
 var (
@@ -80,7 +80,10 @@ func benchmarkAdd(amount int64) (*testing.BenchmarkResult, error) {
 			}
 			defer os.Remove(f.Name())
 
-			random.WritePseudoRandomBytes(amount, f, seed)
+			if err := random.WritePseudoRandomBytes(amount, f, seed); err != nil {
+				benchmarkError = err
+				b.Fatal(err)
+			}
 			if err := f.Close(); err != nil {
 				benchmarkError = err
 				b.Fatal(err)
@@ -95,8 +98,10 @@ func benchmarkAdd(amount int64) (*testing.BenchmarkResult, error) {
 						benchmarkError = err
 						b.Fatal(err)
 					}
-					defer daemonCmd.Wait()
-					defer daemonCmd.Process.Signal(os.Interrupt)
+					defer func() {
+						_ = daemonCmd.Process.Signal(os.Interrupt)
+						_ = daemonCmd.Wait()
+					}()
 				}
 
 				b.StartTimer()

@@ -8,16 +8,16 @@ import (
 	"time"
 
 	cmdenv "github.com/elastos/Elastos.NET.Hive.IPFS/core/commands/cmdenv"
-	e "github.com/elastos/Elastos.NET.Hive.IPFS/core/commands/e"
 	ncmd "github.com/elastos/Elastos.NET.Hive.IPFS/core/commands/name"
-	coreiface "github.com/elastos/Elastos.NET.Hive.IPFS/core/coreapi/interface"
-	options "github.com/elastos/Elastos.NET.Hive.IPFS/core/coreapi/interface/options"
 	ns "github.com/elastos/Elastos.NET.Hive.IPFS/namesys"
-	nsopts "github.com/elastos/Elastos.NET.Hive.IPFS/namesys/opts"
-	path "gx/ipfs/QmT3rzed1ppXefourpmoZ7tyVQfsGPQZ1pHDngLmCvXxd3/go-path"
 
-	"gx/ipfs/QmSXUokcP4TJpFfqozT69AVAYRtzXVMUjzQVkYX41R9Svs/go-ipfs-cmds"
-	"gx/ipfs/Qmde5VP1qUkyQXKCfmEUA7bP64V2HAptbJ7phuPp7jXWwg/go-ipfs-cmdkit"
+	cidenc "github.com/ipfs/go-cidutil/cidenc"
+	cmdkit "github.com/ipfs/go-ipfs-cmdkit"
+	cmds "github.com/ipfs/go-ipfs-cmds"
+	path "github.com/ipfs/go-path"
+	coreiface "github.com/ipfs/interface-go-ipfs-core"
+	options "github.com/ipfs/interface-go-ipfs-core/options"
+	nsopts "github.com/ipfs/interface-go-ipfs-core/options/namesys"
 )
 
 const (
@@ -70,30 +70,35 @@ Resolve the value of an IPFS DAG path:
 		cmdkit.StringArg("name", true, false, "The name to resolve.").EnableStdin(),
 	},
 	Options: []cmdkit.Option{
-		cmdkit.BoolOption(resolveRecursiveOptionName, "r", "Resolve until the result is an IPFS name."),
+		cmdkit.BoolOption(resolveRecursiveOptionName, "r", "Resolve until the result is an IPFS name.").WithDefault(true),
 		cmdkit.IntOption(resolveDhtRecordCountOptionName, "dhtrc", "Number of records to request for DHT resolution."),
 		cmdkit.StringOption(resolveDhtTimeoutOptionName, "dhtt", "Max time to collect values during DHT resolution eg \"30s\". Pass 0 for no timeout."),
 	},
 	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) error {
-		api, err := cmdenv.GetApi(env)
+		api, err := cmdenv.GetApi(env, req)
 		if err != nil {
 			return err
-		}
-
-		n, err := cmdenv.GetNode(env)
-		if err != nil {
-			return err
-		}
-
-		if !n.OnlineMode() {
-			err := n.SetupOfflineRouting()
-			if err != nil {
-				return err
-			}
 		}
 
 		name := req.Arguments[0]
 		recursive, _ := req.Options[resolveRecursiveOptionName].(bool)
+
+		var enc cidenc.Encoder
+		switch {
+		case !cmdenv.CidBaseDefined(req):
+			// Not specified, check the path.
+			enc, err = cmdenv.CidEncoderFromPath(name)
+			if err == nil {
+				break
+			}
+			// Nope, fallback on the default.
+			fallthrough
+		default:
+			enc, err = cmdenv.GetCidEncoder(req)
+			if err != nil {
+				return err
+			}
+		}
 
 		// the case when ipns is resolved step by step
 		if strings.HasPrefix(name, "/ipns/") && !recursive {
@@ -135,22 +140,16 @@ Resolve the value of an IPFS DAG path:
 			return err
 		}
 
-		if rp.Remainder() != "" {
-			// TODO: js expects this error. Instead of fixing this
-			// error, we should fix #5703.
-			return fmt.Errorf("found non-link at given path")
+		encoded := "/" + rp.Namespace() + "/" + enc.Encode(rp.Cid())
+		if remainder := rp.Remainder(); remainder != "" {
+			encoded += "/" + remainder
 		}
 
-		return cmds.EmitOnce(res, &ncmd.ResolvedPath{Path: path.Path("/" + rp.Namespace() + "/" + rp.Cid().String())})
+		return cmds.EmitOnce(res, &ncmd.ResolvedPath{Path: path.Path(encoded)})
 	},
 	Encoders: cmds.EncoderMap{
-		cmds.Text: cmds.MakeEncoder(func(req *cmds.Request, w io.Writer, v interface{}) error {
-			output, ok := v.(*ncmd.ResolvedPath)
-			if !ok {
-				return e.TypeErr(output, v)
-			}
-
-			fmt.Fprintln(w, output.Path.String())
+		cmds.Text: cmds.MakeTypedEncoder(func(req *cmds.Request, w io.Writer, rp *ncmd.ResolvedPath) error {
+			fmt.Fprintln(w, rp.Path.String())
 			return nil
 		}),
 	},

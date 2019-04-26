@@ -11,8 +11,8 @@ import (
 
 	"github.com/elastos/Elastos.NET.Hive.IPFS/thirdparty/unit"
 
-	random "gx/ipfs/QmSJ9n2s9NUoA9D849W5jj5SJ94nMcZpj1jCgQJieiNqSt/go-random"
-	config "gx/ipfs/QmVFZsFtfRgn6hxEAyW5rDiuUYPpiCML4XHtz1p7LDsdon/go-ipfs-config"
+	config "github.com/elastos/Elastos.NET.Hive.IPFS.Config"
+	random "github.com/jbenet/go-random"
 )
 
 func main() {
@@ -62,7 +62,10 @@ func benchmarkAdd(amount int64) (*testing.BenchmarkResult, error) {
 			}
 			defer os.Remove(f.Name())
 
-			random.WritePseudoRandomBytes(amount, f, seed)
+			err = random.WritePseudoRandomBytes(amount, f, seed)
+			if err != nil {
+				b.Fatal(err)
+			}
 			if err := f.Close(); err != nil {
 				b.Fatal(err)
 			}

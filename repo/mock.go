@@ -6,8 +6,8 @@ import (
 	filestore "github.com/elastos/Elastos.NET.Hive.IPFS/filestore"
 	keystore "github.com/elastos/Elastos.NET.Hive.IPFS/keystore"
 
-	ma "gx/ipfs/QmT4U94DnD8FRfqr21obWY32HLM5VExccPKMjQHofeYqr9/go-multiaddr"
-	config "gx/ipfs/QmVFZsFtfRgn6hxEAyW5rDiuUYPpiCML4XHtz1p7LDsdon/go-ipfs-config"
+	config "github.com/elastos/Elastos.NET.Hive.IPFS.Config"
+	ma "github.com/multiformats/go-multiaddr"
 )
 
 var errTODO = errors.New("TODO: mock repo")
@@ -17,6 +17,7 @@ type Mock struct {
 	C config.Config
 	D Datastore
 	K keystore.Keystore
+	F *filestore.FileManager
 }
 
 func (m *Mock) Config() (*config.Config, error) {
@@ -54,4 +55,4 @@ func (m *Mock) SwarmKey() ([]byte, error) {
 	return nil, nil
 }
 
-func (m *Mock) FileManager() *filestore.FileManager { return nil }
+func (m *Mock) FileManager() *filestore.FileManager { return m.F }

@@ -1,10 +1,8 @@
 package unixfs
 
 import (
-	cmds "github.com/elastos/Elastos.NET.Hive.IPFS/commands"
-	e "github.com/elastos/Elastos.NET.Hive.IPFS/core/commands/e"
-
-	"gx/ipfs/Qmde5VP1qUkyQXKCfmEUA7bP64V2HAptbJ7phuPp7jXWwg/go-ipfs-cmdkit"
+	cmdkit "github.com/ipfs/go-ipfs-cmdkit"
+	cmds "github.com/ipfs/go-ipfs-cmds"
 )
 
 var UnixFSCmd = &cmds.Command{
@@ -25,18 +23,4 @@ objects (e.g. fanout and chunking).
 	Subcommands: map[string]*cmds.Command{
 		"ls": LsCmd,
 	},
-}
-
-// copy+pasted from ../commands.go
-func unwrapOutput(i interface{}) (interface{}, error) {
-	var (
-		ch <-chan interface{}
-		ok bool
-	)
-
-	if ch, ok = i.(<-chan interface{}); !ok {
-		return nil, e.TypeErr(ch, i)
-	}
-
-	return <-ch, nil
 }

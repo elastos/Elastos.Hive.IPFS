@@ -1,28 +1,35 @@
 package commands
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"path"
 	"sort"
+	"sync"
+	"time"
 
-	"github.com/elastos/Elastos.NET.Hive.IPFS/commands"
-	"github.com/elastos/Elastos.NET.Hive.IPFS/core/commands/cmdenv"
-	"github.com/elastos/Elastos.NET.Hive.IPFS/core/commands/e"
-	"github.com/elastos/Elastos.NET.Hive.IPFS/repo"
-	"github.com/elastos/Elastos.NET.Hive.IPFS/repo/fsrepo"
+	commands "github.com/elastos/Elastos.NET.Hive.IPFS/commands"
+	cmdenv "github.com/elastos/Elastos.NET.Hive.IPFS/core/commands/cmdenv"
+	repo "github.com/elastos/Elastos.NET.Hive.IPFS/repo"
+	fsrepo "github.com/elastos/Elastos.NET.Hive.IPFS/repo/fsrepo"
 
-	mafilter "gx/ipfs/QmSMZwvs3n4GBikZ7hKzT17c3bk65FmyZo2JqtJ16swqCv/multiaddr-filter"
-	"gx/ipfs/QmSXUokcP4TJpFfqozT69AVAYRtzXVMUjzQVkYX41R9Svs/go-ipfs-cmds"
-	ma "gx/ipfs/QmT4U94DnD8FRfqr21obWY32HLM5VExccPKMjQHofeYqr9/go-multiaddr"
-	peer "gx/ipfs/QmTRhk7cgjUf2gfQ3p2M9KPECNZEW9XUrmHcFCgog4cPgB/go-libp2p-peer"
-	pstore "gx/ipfs/QmTTJcDL3gsnGDALjh2fDGg1onGRUdVgNL2hU2WEZcVrMX/go-libp2p-peerstore"
-	"gx/ipfs/QmVFZsFtfRgn6hxEAyW5rDiuUYPpiCML4XHtz1p7LDsdon/go-ipfs-config"
-	"gx/ipfs/QmVHhT8NxtApPTndiZPe4JNGNUxGWtJe3ebyxtRz4HnbEp/go-libp2p-swarm"
-	inet "gx/ipfs/QmXuRkCR7BNQa9uqfpTiFWsTQLzmTWYg91Ja1w95gnqb6u/go-libp2p-net"
-	iaddr "gx/ipfs/QmZc5PLgxW61uTPG24TroxHDF6xzgbhZZQf5i53ciQC47Y/go-ipfs-addr"
-	"gx/ipfs/Qmde5VP1qUkyQXKCfmEUA7bP64V2HAptbJ7phuPp7jXWwg/go-ipfs-cmdkit"
+	iaddr "github.com/ipfs/go-ipfs-addr"
+	cmdkit "github.com/ipfs/go-ipfs-cmdkit"
+	cmds "github.com/ipfs/go-ipfs-cmds"
+	config "github.com/elastos/Elastos.NET.Hive.IPFS.Config"
+	inet "github.com/libp2p/go-libp2p-net"
+	peer "github.com/libp2p/go-libp2p-peer"
+	pstore "github.com/libp2p/go-libp2p-peerstore"
+	swarm "github.com/libp2p/go-libp2p-swarm"
+	ma "github.com/multiformats/go-multiaddr"
+	madns "github.com/multiformats/go-multiaddr-dns"
+	mafilter "github.com/whyrusleeping/multiaddr-filter"
+)
+
+const (
+	dnsResolveTimeout = 10 * time.Second
 )
 
 type stringList struct {
@@ -72,7 +79,7 @@ var swarmPeersCmd = &cmds.Command{
 		cmdkit.BoolOption(swarmDirectionOptionName, "Also list information about the direction of connection"),
 	},
 	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) error {
-		api, err := cmdenv.GetApi(env)
+		api, err := cmdenv.GetApi(env, req)
 		if err != nil {
 			return err
 		}
@@ -129,12 +136,7 @@ var swarmPeersCmd = &cmds.Command{
 		return cmds.EmitOnce(res, &out)
 	},
 	Encoders: cmds.EncoderMap{
-		cmds.Text: cmds.MakeEncoder(func(req *cmds.Request, w io.Writer, v interface{}) error {
-			ci, ok := v.(*connInfos)
-			if !ok {
-				return e.TypeErr(ci, v)
-			}
-
+		cmds.Text: cmds.MakeTypedEncoder(func(req *cmds.Request, w io.Writer, ci *connInfos) error {
 			pipfs := ma.ProtocolWithCode(ma.P_IPFS).Name
 			for _, info := range ci.Peers {
 				fmt.Fprintf(w, "%s/%s/%s", info.Addr, pipfs, info.Peer)
@@ -227,7 +229,7 @@ var swarmAddrsCmd = &cmds.Command{
 		"listen": swarmAddrsListenCmd,
 	},
 	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) error {
-		api, err := cmdenv.GetApi(env)
+		api, err := cmdenv.GetApi(env, req)
 		if err != nil {
 			return err
 		}
@@ -248,26 +250,22 @@ var swarmAddrsCmd = &cmds.Command{
 		return cmds.EmitOnce(res, &addrMap{Addrs: out})
 	},
 	Encoders: cmds.EncoderMap{
-		cmds.Text: cmds.MakeEncoder(func(req *cmds.Request, w io.Writer, v interface{}) error {
-			m, ok := v.(*addrMap)
-			if !ok {
-				return e.TypeErr(m, v)
-			}
-
+		cmds.Text: cmds.MakeTypedEncoder(func(req *cmds.Request, w io.Writer, am *addrMap) error {
 			// sort the ids first
-			ids := make([]string, 0, len(m.Addrs))
-			for p := range m.Addrs {
+			ids := make([]string, 0, len(am.Addrs))
+			for p := range am.Addrs {
 				ids = append(ids, p)
 			}
-			sort.Sort(sort.StringSlice(ids))
+			sort.Strings(ids)
 
 			for _, p := range ids {
-				paddrs := m.Addrs[p]
+				paddrs := am.Addrs[p]
 				fmt.Fprintf(w, "%s (%d)\n", p, len(paddrs))
 				for _, addr := range paddrs {
 					fmt.Fprintf(w, "\t"+addr+"\n")
 				}
 			}
+
 			return nil
 		}),
 	},
@@ -285,7 +283,7 @@ var swarmAddrsLocalCmd = &cmds.Command{
 		cmdkit.BoolOption("id", "Show peer ID in addresses."),
 	},
 	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) error {
-		api, err := cmdenv.GetApi(env)
+		api, err := cmdenv.GetApi(env, req)
 		if err != nil {
 			return err
 		}
@@ -309,12 +307,12 @@ var swarmAddrsLocalCmd = &cmds.Command{
 			}
 			addrs = append(addrs, saddr)
 		}
-		sort.Sort(sort.StringSlice(addrs))
+		sort.Strings(addrs)
 		return cmds.EmitOnce(res, &stringList{addrs})
 	},
 	Type: stringList{},
 	Encoders: cmds.EncoderMap{
-		cmds.Text: cmds.MakeEncoder(stringListEncoder),
+		cmds.Text: cmds.MakeTypedEncoder(stringListEncoder),
 	},
 }
 
@@ -326,7 +324,7 @@ var swarmAddrsListenCmd = &cmds.Command{
 `,
 	},
 	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) error {
-		api, err := cmdenv.GetApi(env)
+		api, err := cmdenv.GetApi(env, req)
 		if err != nil {
 			return err
 		}
@@ -340,13 +338,13 @@ var swarmAddrsListenCmd = &cmds.Command{
 		for _, addr := range maddrs {
 			addrs = append(addrs, addr.String())
 		}
-		sort.Sort(sort.StringSlice(addrs))
+		sort.Strings(addrs)
 
 		return cmds.EmitOnce(res, &stringList{addrs})
 	},
 	Type: stringList{},
 	Encoders: cmds.EncoderMap{
-		cmds.Text: cmds.MakeEncoder(stringListEncoder),
+		cmds.Text: cmds.MakeTypedEncoder(stringListEncoder),
 	},
 }
 
@@ -365,14 +363,14 @@ ipfs swarm connect /ip4/104.131.131.82/tcp/4001/ipfs/QmaCpDMGvV2BGHeYERUEnRQAwe3
 		cmdkit.StringArg("address", true, true, "Address of peer to connect to.").EnableStdin(),
 	},
 	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) error {
-		api, err := cmdenv.GetApi(env)
+		api, err := cmdenv.GetApi(env, req)
 		if err != nil {
 			return err
 		}
 
 		addrs := req.Arguments
 
-		pis, err := peersWithAddresses(addrs)
+		pis, err := peersWithAddresses(req.Context, addrs)
 		if err != nil {
 			return err
 		}
@@ -391,7 +389,7 @@ ipfs swarm connect /ip4/104.131.131.82/tcp/4001/ipfs/QmaCpDMGvV2BGHeYERUEnRQAwe3
 		return cmds.EmitOnce(res, &stringList{output})
 	},
 	Encoders: cmds.EncoderMap{
-		cmds.Text: cmds.MakeEncoder(stringListEncoder),
+		cmds.Text: cmds.MakeTypedEncoder(stringListEncoder),
 	},
 	Type: stringList{},
 }
@@ -413,7 +411,7 @@ it will reconnect.
 		cmdkit.StringArg("address", true, true, "Address of peer to disconnect from.").EnableStdin(),
 	},
 	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) error {
-		api, err := cmdenv.GetApi(env)
+		api, err := cmdenv.GetApi(env, req)
 		if err != nil {
 			return err
 		}
@@ -436,7 +434,7 @@ it will reconnect.
 		return cmds.EmitOnce(res, &stringList{output})
 	},
 	Encoders: cmds.EncoderMap{
-		cmds.Text: cmds.MakeEncoder(stringListEncoder),
+		cmds.Text: cmds.MakeTypedEncoder(stringListEncoder),
 	},
 	Type: stringList{},
 }
@@ -454,10 +452,29 @@ func parseAddresses(addrs []string) (iaddrs []iaddr.IPFSAddr, err error) {
 	return
 }
 
+// parseMultiaddrs is a function that takes in a slice of peer multiaddr
+// and returns slices of multiaddrs and peerids
+func parseMultiaddrs(maddrs []ma.Multiaddr) (iaddrs []iaddr.IPFSAddr, err error) {
+	iaddrs = make([]iaddr.IPFSAddr, len(maddrs))
+	for i, maddr := range maddrs {
+		iaddrs[i], err = iaddr.ParseMultiaddr(maddr)
+		if err != nil {
+			return nil, cmds.ClientError("invalid peer address: " + err.Error())
+		}
+	}
+	return
+}
+
 // peersWithAddresses is a function that takes in a slice of string peer addresses
 // (multiaddr + peerid) and returns a slice of properly constructed peers
-func peersWithAddresses(addrs []string) ([]pstore.PeerInfo, error) {
-	iaddrs, err := parseAddresses(addrs)
+func peersWithAddresses(ctx context.Context, addrs []string) ([]pstore.PeerInfo, error) {
+	// resolve addresses
+	maddrs, err := resolveAddresses(ctx, addrs)
+	if err != nil {
+		return nil, err
+	}
+
+	iaddrs, err := parseMultiaddrs(maddrs)
 	if err != nil {
 		return nil, err
 	}
@@ -480,6 +497,67 @@ func peersWithAddresses(addrs []string) ([]pstore.PeerInfo, error) {
 		})
 	}
 	return pis, nil
+}
+
+// resolveAddresses resolves addresses parallelly
+func resolveAddresses(ctx context.Context, addrs []string) ([]ma.Multiaddr, error) {
+	ctx, cancel := context.WithTimeout(ctx, dnsResolveTimeout)
+	defer cancel()
+
+	var maddrs []ma.Multiaddr
+	var wg sync.WaitGroup
+	resolveErrC := make(chan error, len(addrs))
+
+	maddrC := make(chan ma.Multiaddr)
+
+	for _, addr := range addrs {
+		maddr, err := ma.NewMultiaddr(addr)
+		if err != nil {
+			return nil, err
+		}
+
+		// check whether address ends in `ipfs/Qm...`
+		if _, last := ma.SplitLast(maddr); last.Protocol().Code == ma.P_IPFS {
+			maddrs = append(maddrs, maddr)
+			continue
+		}
+		wg.Add(1)
+		go func(maddr ma.Multiaddr) {
+			defer wg.Done()
+			raddrs, err := madns.Resolve(ctx, maddr)
+			if err != nil {
+				resolveErrC <- err
+				return
+			}
+			// filter out addresses that still doesn't end in `ipfs/Qm...`
+			found := 0
+			for _, raddr := range raddrs {
+				if _, last := ma.SplitLast(raddr); last.Protocol().Code == ma.P_IPFS {
+					maddrC <- raddr
+					found++
+				}
+			}
+			if found == 0 {
+				resolveErrC <- fmt.Errorf("found no ipfs peers at %s", maddr)
+			}
+		}(maddr)
+	}
+	go func() {
+		wg.Wait()
+		close(maddrC)
+	}()
+
+	for maddr := range maddrC {
+		maddrs = append(maddrs, maddr)
+	}
+
+	select {
+	case err := <-resolveErrC:
+		return nil, err
+	default:
+	}
+
+	return maddrs, nil
 }
 
 var swarmFiltersCmd = &cmds.Command{
@@ -532,7 +610,7 @@ Filters default to those specified under the "Swarm.AddrFilters" config key.
 		return cmds.EmitOnce(res, &stringList{output})
 	},
 	Encoders: cmds.EncoderMap{
-		cmds.Text: cmds.MakeEncoder(stringListEncoder),
+		cmds.Text: cmds.MakeTypedEncoder(stringListEncoder),
 	},
 	Type: stringList{},
 }
@@ -596,7 +674,7 @@ add your filters to the ipfs config file.
 		return cmds.EmitOnce(res, &stringList{added})
 	},
 	Encoders: cmds.EncoderMap{
-		cmds.Text: cmds.MakeEncoder(stringListEncoder),
+		cmds.Text: cmds.MakeTypedEncoder(stringListEncoder),
 	},
 	Type: stringList{},
 }
@@ -669,7 +747,7 @@ remove your filters from the ipfs config file.
 		return cmds.EmitOnce(res, &stringList{removed})
 	},
 	Encoders: cmds.EncoderMap{
-		cmds.Text: cmds.MakeEncoder(stringListEncoder),
+		cmds.Text: cmds.MakeTypedEncoder(stringListEncoder),
 	},
 	Type: stringList{},
 }

@@ -9,15 +9,15 @@ import (
 	"strconv"
 	"strings"
 
-	version "github.com/elastos/Elastos.NET.Hive.IPFS"
+	version "github.com/ipfs/go-ipfs"
 	oldcmds "github.com/elastos/Elastos.NET.Hive.IPFS/commands"
 	"github.com/elastos/Elastos.NET.Hive.IPFS/core"
 	corecommands "github.com/elastos/Elastos.NET.Hive.IPFS/core/commands"
 
-	cmds "gx/ipfs/QmSXUokcP4TJpFfqozT69AVAYRtzXVMUjzQVkYX41R9Svs/go-ipfs-cmds"
-	cmdsHttp "gx/ipfs/QmSXUokcP4TJpFfqozT69AVAYRtzXVMUjzQVkYX41R9Svs/go-ipfs-cmds/http"
-	path "gx/ipfs/QmT3rzed1ppXefourpmoZ7tyVQfsGPQZ1pHDngLmCvXxd3/go-path"
-	config "gx/ipfs/QmVFZsFtfRgn6hxEAyW5rDiuUYPpiCML4XHtz1p7LDsdon/go-ipfs-config"
+	cmds "github.com/ipfs/go-ipfs-cmds"
+	cmdsHttp "github.com/ipfs/go-ipfs-cmds/http"
+	config "github.com/elastos/Elastos.NET.Hive.IPFS.Config"
+	path "github.com/ipfs/go-path"
 )
 
 var (
@@ -67,12 +67,18 @@ func addHeadersFromConfig(c *cmdsHttp.ServerConfig, nc *config.Config) {
 		}
 	}
 
-	c.Headers = make(map[string][]string, len(nc.API.HTTPHeaders))
+	c.Headers = make(map[string][]string, len(nc.API.HTTPHeaders)+1)
 
 	// Copy these because the config is shared and this function is called
 	// in multiple places concurrently. Updating these in-place *is* racy.
 	for h, v := range nc.API.HTTPHeaders {
-		c.Headers[h] = v
+		h = http.CanonicalHeaderKey(h)
+		switch h {
+		case cmdsHttp.ACAOrigin, cmdsHttp.ACAMethods, cmdsHttp.ACACredentials:
+			// these are handled by the CORs library.
+		default:
+			c.Headers[h] = v
+		}
 	}
 	c.Headers["Server"] = []string{"go-ipfs/" + version.CurrentVersionNumber}
 }

@@ -5,7 +5,7 @@ import (
 
 	core "github.com/elastos/Elastos.NET.Hive.IPFS/core"
 	coremock "github.com/elastos/Elastos.NET.Hive.IPFS/core/mock"
-	path "gx/ipfs/QmT3rzed1ppXefourpmoZ7tyVQfsGPQZ1pHDngLmCvXxd3/go-path"
+	path "github.com/ipfs/go-path"
 )
 
 func TestResolveNoComponents(t *testing.T) {

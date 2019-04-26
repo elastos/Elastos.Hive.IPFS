@@ -9,7 +9,7 @@ import (
 	"github.com/elastos/Elastos.NET.Hive.IPFS/core"
 	fsrepo "github.com/elastos/Elastos.NET.Hive.IPFS/repo/fsrepo"
 
-	humanize "gx/ipfs/QmPSBJL4momYnE7DcUyk2DVhD6rH488ZmHBGLbxNdhU44K/go-humanize"
+	humanize "github.com/dustin/go-humanize"
 )
 
 // SizeStat wraps information about the repository size and its limit.

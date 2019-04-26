@@ -1,15 +1,17 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"runtime"
+	"runtime/debug"
 
-	version "github.com/elastos/Elastos.NET.Hive.IPFS"
+	version "github.com/ipfs/go-ipfs"
 	fsrepo "github.com/elastos/Elastos.NET.Hive.IPFS/repo/fsrepo"
 
-	cmds "gx/ipfs/QmSXUokcP4TJpFfqozT69AVAYRtzXVMUjzQVkYX41R9Svs/go-ipfs-cmds"
-	"gx/ipfs/Qmde5VP1qUkyQXKCfmEUA7bP64V2HAptbJ7phuPp7jXWwg/go-ipfs-cmdkit"
+	cmdkit "github.com/ipfs/go-ipfs-cmdkit"
+	cmds "github.com/ipfs/go-ipfs-cmds"
 )
 
 type VersionOutput struct {
@@ -32,6 +34,9 @@ var VersionCmd = &cmds.Command{
 		Tagline:          "Show ipfs version information.",
 		ShortDescription: "Returns the current version of ipfs and exits.",
 	},
+	Subcommands: map[string]*cmds.Command{
+		"deps": depsVersionCommand,
+	},
 
 	Options: []cmdkit.Option{
 		cmdkit.BoolOption(versionNumberOptionName, "n", "Only show the version number."),
@@ -50,22 +55,10 @@ var VersionCmd = &cmds.Command{
 	},
 	Encoders: cmds.EncoderMap{
 		cmds.Text: cmds.MakeTypedEncoder(func(req *cmds.Request, w io.Writer, version *VersionOutput) error {
-			repo, _ := req.Options[versionRepoOptionName].(bool)
-			if repo {
-				fmt.Fprintln(w, version.Repo)
-				return nil
-			}
-
 			commit, _ := req.Options[versionCommitOptionName].(bool)
 			commitTxt := ""
 			if commit {
 				commitTxt = "-" + version.Commit
-			}
-
-			number, _ := req.Options[versionNumberOptionName].(bool)
-			if number {
-				fmt.Fprintln(w, version.Version+commitTxt)
-				return nil
 			}
 
 			all, _ := req.Options[versionAllOptionName].(bool)
@@ -77,9 +70,74 @@ var VersionCmd = &cmds.Command{
 				return nil
 			}
 
+			repo, _ := req.Options[versionRepoOptionName].(bool)
+			if repo {
+				fmt.Fprintln(w, version.Repo)
+				return nil
+			}
+
+			number, _ := req.Options[versionNumberOptionName].(bool)
+			if number {
+				fmt.Fprintln(w, version.Version+commitTxt)
+				return nil
+			}
+
 			fmt.Fprint(w, fmt.Sprintf("ipfs version %s%s\n", version.Version, commitTxt))
 			return nil
 		}),
 	},
 	Type: VersionOutput{},
+}
+
+type Dependency struct {
+	Path       string
+	Version    string
+	ReplacedBy string
+	Sum        string
+}
+
+const pkgVersionFmt = "%s@%s"
+
+var depsVersionCommand = &cmds.Command{
+	Helptext: cmdkit.HelpText{
+		Tagline: "Shows information about dependencies used for build",
+		ShortDescription: `
+Print out all dependencies and their versions.`,
+	},
+	Type: Dependency{},
+
+	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) error {
+		info, ok := debug.ReadBuildInfo()
+		if !ok {
+			return errors.New("no embedded dependency information")
+		}
+		toDependency := func(mod *debug.Module) (dep Dependency) {
+			dep.Path = mod.Path
+			dep.Version = mod.Version
+			dep.Sum = mod.Sum
+			if repl := mod.Replace; repl != nil {
+				dep.ReplacedBy = fmt.Sprintf(pkgVersionFmt, repl.Path, repl.Version)
+			}
+			return
+		}
+		if err := res.Emit(toDependency(&info.Main)); err != nil {
+			return err
+		}
+		for _, dep := range info.Deps {
+			if err := res.Emit(toDependency(dep)); err != nil {
+				return err
+			}
+		}
+		return nil
+	},
+	Encoders: cmds.EncoderMap{
+		cmds.Text: cmds.MakeTypedEncoder(func(req *cmds.Request, w io.Writer, dep Dependency) error {
+			fmt.Fprintf(w, pkgVersionFmt, dep.Path, dep.Version)
+			if dep.ReplacedBy != "" {
+				fmt.Fprintf(w, " => %s", dep.ReplacedBy)
+			}
+			fmt.Fprintf(w, "\n")
+			return nil
+		}),
+	},
 }

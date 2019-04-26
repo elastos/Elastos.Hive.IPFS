@@ -2,27 +2,30 @@ package coreapi
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
-	coreiface "github.com/elastos/Elastos.NET.Hive.IPFS/core/coreapi/interface"
-	caopts "github.com/elastos/Elastos.NET.Hive.IPFS/core/coreapi/interface/options"
-
-	cid "gx/ipfs/QmPSQnBKM9g7BaUcZCvswUJVscQ1ipjmwxN5PXCjkp9EQ7/go-cid"
-	cidutil "gx/ipfs/QmQJSeE3CX4zos9qeaG8EhecEK9zvrTEfTG84J8C5NVRwt/go-cidutil"
-	dag "gx/ipfs/QmSei8kFMfqdJq7Q68d2LMnHbTWKKg2daA29ezUYFAUNgc/go-merkledag"
-	offline "gx/ipfs/QmT6dHGp3UYd3vUMpy7rzX2CXQv7HLcj42Vtq8qwwjgASb/go-ipfs-exchange-offline"
-	peer "gx/ipfs/QmTRhk7cgjUf2gfQ3p2M9KPECNZEW9XUrmHcFCgog4cPgB/go-libp2p-peer"
-	pstore "gx/ipfs/QmTTJcDL3gsnGDALjh2fDGg1onGRUdVgNL2hU2WEZcVrMX/go-libp2p-peerstore"
-	blockservice "gx/ipfs/QmWfhv1D18DRSiSm73r4QGcByspzPtxxRTcmHW3axFXZo8/go-blockservice"
-	blockstore "gx/ipfs/QmcDDgAXDbpDUpadCJKLr49KYR4HuL7T8Z1dZTHt6ixsoR/go-ipfs-blockstore"
-	routing "gx/ipfs/QmcQ81jSyWCp1jpkQ8CMbtpXT3jK7Wg6ZtYmoyWFgBoF9c/go-libp2p-routing"
+	blockservice "github.com/ipfs/go-blockservice"
+	cid "github.com/ipfs/go-cid"
+	cidutil "github.com/ipfs/go-cidutil"
+	blockstore "github.com/ipfs/go-ipfs-blockstore"
+	offline "github.com/ipfs/go-ipfs-exchange-offline"
+	dag "github.com/ipfs/go-merkledag"
+	coreiface "github.com/ipfs/interface-go-ipfs-core"
+	caopts "github.com/ipfs/interface-go-ipfs-core/options"
+	peer "github.com/libp2p/go-libp2p-peer"
+	pstore "github.com/libp2p/go-libp2p-peerstore"
+	routing "github.com/libp2p/go-libp2p-routing"
 )
 
 type DhtAPI CoreAPI
 
 func (api *DhtAPI) FindPeer(ctx context.Context, p peer.ID) (pstore.PeerInfo, error) {
-	pi, err := api.node.Routing.FindPeer(ctx, peer.ID(p))
+	err := api.checkOnline(false)
+	if err != nil {
+		return pstore.PeerInfo{}, err
+	}
+
+	pi, err := api.routing.FindPeer(ctx, peer.ID(p))
 	if err != nil {
 		return pstore.PeerInfo{}, err
 	}
@@ -32,6 +35,11 @@ func (api *DhtAPI) FindPeer(ctx context.Context, p peer.ID) (pstore.PeerInfo, er
 
 func (api *DhtAPI) FindProviders(ctx context.Context, p coreiface.Path, opts ...caopts.DhtFindProvidersOption) (<-chan pstore.PeerInfo, error) {
 	settings, err := caopts.DhtFindProvidersOptions(opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	err = api.checkOnline(false)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +54,7 @@ func (api *DhtAPI) FindProviders(ctx context.Context, p coreiface.Path, opts ...
 		return nil, fmt.Errorf("number of providers must be greater than 0")
 	}
 
-	pchan := api.node.Routing.FindProvidersAsync(ctx, rp.Cid(), numProviders)
+	pchan := api.routing.FindProvidersAsync(ctx, rp.Cid(), numProviders)
 	return pchan, nil
 }
 
@@ -56,8 +64,9 @@ func (api *DhtAPI) Provide(ctx context.Context, path coreiface.Path, opts ...cao
 		return err
 	}
 
-	if api.node.Routing == nil {
-		return errors.New("cannot provide in offline mode")
+	err = api.checkOnline(false)
+	if err != nil {
+		return err
 	}
 
 	rp, err := api.core().ResolvePath(ctx, path)
@@ -67,7 +76,7 @@ func (api *DhtAPI) Provide(ctx context.Context, path coreiface.Path, opts ...cao
 
 	c := rp.Cid()
 
-	has, err := api.node.Blockstore.Has(c)
+	has, err := api.blockstore.Has(c)
 	if err != nil {
 		return err
 	}
@@ -77,9 +86,9 @@ func (api *DhtAPI) Provide(ctx context.Context, path coreiface.Path, opts ...cao
 	}
 
 	if settings.Recursive {
-		err = provideKeysRec(ctx, api.node.Routing, api.node.Blockstore, []cid.Cid{c})
+		err = provideKeysRec(ctx, api.routing, api.blockstore, []cid.Cid{c})
 	} else {
-		err = provideKeys(ctx, api.node.Routing, []cid.Cid{c})
+		err = provideKeys(ctx, api.routing, []cid.Cid{c})
 	}
 	if err != nil {
 		return err

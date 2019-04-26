@@ -5,38 +5,37 @@ import (
 	"fmt"
 
 	"github.com/elastos/Elastos.NET.Hive.IPFS/core"
-	"github.com/elastos/Elastos.NET.Hive.IPFS/filestore"
 
-	coreiface "github.com/elastos/Elastos.NET.Hive.IPFS/core/coreapi/interface"
-	"github.com/elastos/Elastos.NET.Hive.IPFS/core/coreapi/interface/options"
 	"github.com/elastos/Elastos.NET.Hive.IPFS/core/coreunix"
 
-	cidutil "gx/ipfs/QmQJSeE3CX4zos9qeaG8EhecEK9zvrTEfTG84J8C5NVRwt/go-cidutil"
-	ipld "gx/ipfs/QmR7TcHkR9nxkUorfi8XMTAMLUK7GiP64TWWBzY3aacc1o/go-ipld-format"
-	dag "gx/ipfs/QmSei8kFMfqdJq7Q68d2LMnHbTWKKg2daA29ezUYFAUNgc/go-merkledag"
-	dagtest "gx/ipfs/QmSei8kFMfqdJq7Q68d2LMnHbTWKKg2daA29ezUYFAUNgc/go-merkledag/test"
-	offline "gx/ipfs/QmT6dHGp3UYd3vUMpy7rzX2CXQv7HLcj42Vtq8qwwjgASb/go-ipfs-exchange-offline"
-	mfs "gx/ipfs/QmUwXQs8aZ472DmXZ8uJNf7HJNKoMJQVa7RaCz7ujZ3ua9/go-mfs"
-	blockservice "gx/ipfs/QmWfhv1D18DRSiSm73r4QGcByspzPtxxRTcmHW3axFXZo8/go-blockservice"
-	files "gx/ipfs/QmZMWMvWMVKCbHetJ4RgndbuEF1io2UpUxwQwtNjtYPzSC/go-ipfs-files"
-	bstore "gx/ipfs/QmcDDgAXDbpDUpadCJKLr49KYR4HuL7T8Z1dZTHt6ixsoR/go-ipfs-blockstore"
-	ft "gx/ipfs/QmfB3oNXGGq9S4B2a9YeCajoATms3Zw2VvDm8fK7VeLSV8/go-unixfs"
-	uio "gx/ipfs/QmfB3oNXGGq9S4B2a9YeCajoATms3Zw2VvDm8fK7VeLSV8/go-unixfs/io"
+	blockservice "github.com/ipfs/go-blockservice"
+	cid "github.com/ipfs/go-cid"
+	cidutil "github.com/ipfs/go-cidutil"
+	bstore "github.com/ipfs/go-ipfs-blockstore"
+	files "github.com/ipfs/go-ipfs-files"
+	ipld "github.com/ipfs/go-ipld-format"
+	dag "github.com/ipfs/go-merkledag"
+	merkledag "github.com/ipfs/go-merkledag"
+	dagtest "github.com/ipfs/go-merkledag/test"
+	mfs "github.com/ipfs/go-mfs"
+	ft "github.com/ipfs/go-unixfs"
+	unixfile "github.com/ipfs/go-unixfs/file"
+	uio "github.com/ipfs/go-unixfs/io"
+	coreiface "github.com/ipfs/interface-go-ipfs-core"
+	"github.com/ipfs/interface-go-ipfs-core/options"
 )
 
 type UnixfsAPI CoreAPI
 
 // Add builds a merkledag node from a reader, adds it to the blockstore,
 // and returns the key representing that node.
-func (api *UnixfsAPI) Add(ctx context.Context, files files.File, opts ...options.UnixfsAddOption) (coreiface.ResolvedPath, error) {
+func (api *UnixfsAPI) Add(ctx context.Context, files files.Node, opts ...options.UnixfsAddOption) (coreiface.ResolvedPath, error) {
 	settings, prefix, err := options.UnixfsAddOptions(opts...)
 	if err != nil {
 		return nil, err
 	}
 
-	n := api.node
-
-	cfg, err := n.Repo.Config()
+	cfg, err := api.repo.Config()
 	if err != nil {
 		return nil, err
 	}
@@ -49,9 +48,16 @@ func (api *UnixfsAPI) Add(ctx context.Context, files files.File, opts ...options
 	//	return
 	//}
 
-	if settings.NoCopy && !cfg.Experimental.FilestoreEnabled {
-		return nil, filestore.ErrFilestoreNotEnabled
+	if settings.NoCopy && !(cfg.Experimental.FilestoreEnabled || cfg.Experimental.UrlstoreEnabled) {
+		return nil, fmt.Errorf("either the filestore or the urlstore must be enabled to use nocopy, see: https://git.io/vNItf")
 	}
+
+	addblockstore := api.blockstore
+	if !(settings.FsCache || settings.NoCopy) {
+		addblockstore = bstore.NewGCBlockstore(api.baseBlocks, api.blockstore)
+	}
+	exch := api.exchange
+	pinning := api.pinning
 
 	if settings.OnlyHash {
 		nilnode, err := core.NewNode(ctx, &core.BuildCfg{
@@ -62,23 +68,15 @@ func (api *UnixfsAPI) Add(ctx context.Context, files files.File, opts ...options
 		if err != nil {
 			return nil, err
 		}
-		n = nilnode
-	}
-
-	addblockstore := n.Blockstore
-	if !(settings.FsCache || settings.NoCopy) {
-		addblockstore = bstore.NewGCBlockstore(n.BaseBlocks, n.GCLocker)
-	}
-
-	exch := n.Exchange
-	if settings.Local {
-		exch = offline.Exchange(addblockstore)
+		addblockstore = nilnode.Blockstore
+		exch = nilnode.Exchange
+		pinning = nilnode.Pinning
 	}
 
 	bserv := blockservice.New(addblockstore, exch) // hash security 001
 	dserv := dag.NewDAGService(bserv)
 
-	fileAdder, err := coreunix.NewAdder(ctx, n.Pinning, n.Blockstore, dserv)
+	fileAdder, err := coreunix.NewAdder(ctx, pinning, addblockstore, dserv)
 	if err != nil {
 		return nil, err
 	}
@@ -88,13 +86,10 @@ func (api *UnixfsAPI) Add(ctx context.Context, files files.File, opts ...options
 		fileAdder.Out = settings.Events
 		fileAdder.Progress = settings.Progress
 	}
-	fileAdder.Hidden = settings.Hidden
-	fileAdder.Wrap = settings.Wrap
 	fileAdder.Pin = settings.Pin && !settings.OnlyHash
 	fileAdder.Silent = settings.Silent
 	fileAdder.RawLeaves = settings.RawLeaves
 	fileAdder.NoCopy = settings.NoCopy
-	fileAdder.Name = settings.StdinName
 	fileAdder.CidBuilder = prefix
 
 	switch settings.Layout {
@@ -130,10 +125,15 @@ func (api *UnixfsAPI) Add(ctx context.Context, files files.File, opts ...options
 	if err != nil {
 		return nil, err
 	}
+
+	if err := api.provider.Provide(nd.Cid()); err != nil {
+		return nil, err
+	}
+
 	return coreiface.IpfsPath(nd.Cid()), nil
 }
 
-func (api *UnixfsAPI) Get(ctx context.Context, p coreiface.Path) (coreiface.UnixfsFile, error) {
+func (api *UnixfsAPI) Get(ctx context.Context, p coreiface.Path) (files.Node, error) {
 	ses := api.core().getSession(ctx)
 
 	nd, err := ses.ResolveNode(ctx, p)
@@ -141,36 +141,109 @@ func (api *UnixfsAPI) Get(ctx context.Context, p coreiface.Path) (coreiface.Unix
 		return nil, err
 	}
 
-	return newUnixfsFile(ctx, ses.dag, nd, "", nil)
+	return unixfile.NewUnixfsFile(ctx, ses.dag, nd)
 }
 
 // Ls returns the contents of an IPFS or IPNS object(s) at path p, with the format:
 // `<link base58 hash> <link size in bytes> <link name>`
-func (api *UnixfsAPI) Ls(ctx context.Context, p coreiface.Path) ([]*ipld.Link, error) {
-	dagnode, err := api.core().ResolveNode(ctx, p)
+func (api *UnixfsAPI) Ls(ctx context.Context, p coreiface.Path, opts ...options.UnixfsLsOption) (<-chan coreiface.DirEntry, error) {
+	settings, err := options.UnixfsLsOptions(opts...)
 	if err != nil {
 		return nil, err
 	}
 
-	var ndlinks []*ipld.Link
-	dir, err := uio.NewDirectoryFromNode(api.dag, dagnode)
-	switch err {
-	case nil:
-		l, err := dir.Links(ctx)
-		if err != nil {
-			return nil, err
-		}
-		ndlinks = l
-	case uio.ErrNotADir:
-		ndlinks = dagnode.Links()
-	default:
+	ses := api.core().getSession(ctx)
+	uses := (*UnixfsAPI)(ses)
+
+	dagnode, err := ses.ResolveNode(ctx, p)
+	if err != nil {
 		return nil, err
 	}
 
-	links := make([]*ipld.Link, len(ndlinks))
-	for i, l := range ndlinks {
-		links[i] = &ipld.Link{Name: l.Name, Size: l.Size, Cid: l.Cid}
+	dir, err := uio.NewDirectoryFromNode(ses.dag, dagnode)
+	if err == uio.ErrNotADir {
+		return uses.lsFromLinks(ctx, dagnode.Links(), settings)
 	}
+	if err != nil {
+		return nil, err
+	}
+
+	return uses.lsFromLinksAsync(ctx, dir, settings)
+}
+
+func (api *UnixfsAPI) processLink(ctx context.Context, linkres ft.LinkResult, settings *options.UnixfsLsSettings) coreiface.DirEntry {
+	lnk := coreiface.DirEntry{
+		Name: linkres.Link.Name,
+		Cid:  linkres.Link.Cid,
+		Err:  linkres.Err,
+	}
+	if lnk.Err != nil {
+		return lnk
+	}
+
+	switch lnk.Cid.Type() {
+	case cid.Raw:
+		// No need to check with raw leaves
+		lnk.Type = coreiface.TFile
+		lnk.Size = linkres.Link.Size
+	case cid.DagProtobuf:
+		if !settings.ResolveChildren {
+			break
+		}
+
+		linkNode, err := linkres.Link.GetNode(ctx, api.dag)
+		if err != nil {
+			lnk.Err = err
+			break
+		}
+
+		if pn, ok := linkNode.(*merkledag.ProtoNode); ok {
+			d, err := ft.FSNodeFromBytes(pn.Data())
+			if err != nil {
+				lnk.Err = err
+				break
+			}
+			switch d.Type() {
+			case ft.TFile, ft.TRaw:
+				lnk.Type = coreiface.TFile
+			case ft.THAMTShard, ft.TDirectory, ft.TMetadata:
+				lnk.Type = coreiface.TDirectory
+			case ft.TSymlink:
+				lnk.Type = coreiface.TSymlink
+				lnk.Target = string(d.Data())
+			}
+			lnk.Size = d.FileSize()
+		}
+	}
+
+	return lnk
+}
+
+func (api *UnixfsAPI) lsFromLinksAsync(ctx context.Context, dir uio.Directory, settings *options.UnixfsLsSettings) (<-chan coreiface.DirEntry, error) {
+	out := make(chan coreiface.DirEntry)
+
+	go func() {
+		defer close(out)
+		for l := range dir.EnumLinksAsync(ctx) {
+			select {
+			case out <- api.processLink(ctx, l, settings): //TODO: perf: processing can be done in background and in parallel
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
+	return out, nil
+}
+
+func (api *UnixfsAPI) lsFromLinks(ctx context.Context, ndlinks []*ipld.Link, settings *options.UnixfsLsSettings) (<-chan coreiface.DirEntry, error) {
+	links := make(chan coreiface.DirEntry, len(ndlinks))
+	for _, l := range ndlinks {
+		lr := ft.LinkResult{Link: &ipld.Link{Name: l.Name, Size: l.Size, Cid: l.Cid}}
+
+		links <- api.processLink(ctx, lr, settings) //TODO: can be parallel if settings.Async
+	}
+	close(links)
 	return links, nil
 }
 

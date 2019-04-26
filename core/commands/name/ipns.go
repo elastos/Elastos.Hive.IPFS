@@ -8,14 +8,14 @@ import (
 	"time"
 
 	cmdenv "github.com/elastos/Elastos.NET.Hive.IPFS/core/commands/cmdenv"
-	e "github.com/elastos/Elastos.NET.Hive.IPFS/core/commands/e"
-	options "github.com/elastos/Elastos.NET.Hive.IPFS/core/coreapi/interface/options"
-	nsopts "github.com/elastos/Elastos.NET.Hive.IPFS/namesys/opts"
+	namesys "github.com/elastos/Elastos.NET.Hive.IPFS/namesys"
 
-	cmds "gx/ipfs/QmSXUokcP4TJpFfqozT69AVAYRtzXVMUjzQVkYX41R9Svs/go-ipfs-cmds"
-	path "gx/ipfs/QmT3rzed1ppXefourpmoZ7tyVQfsGPQZ1pHDngLmCvXxd3/go-path"
-	logging "gx/ipfs/QmZChCsSt8DctjceaL56Eibc29CVQq4dGKRXC5JRZ6Ppae/go-log"
-	"gx/ipfs/Qmde5VP1qUkyQXKCfmEUA7bP64V2HAptbJ7phuPp7jXWwg/go-ipfs-cmdkit"
+	cmdkit "github.com/ipfs/go-ipfs-cmdkit"
+	cmds "github.com/ipfs/go-ipfs-cmds"
+	logging "github.com/ipfs/go-log"
+	path "github.com/ipfs/go-path"
+	options "github.com/ipfs/interface-go-ipfs-core/options"
+	nsopts "github.com/ipfs/interface-go-ipfs-core/options/namesys"
 )
 
 var log = logging.Logger("core/commands/ipns")
@@ -74,20 +74,19 @@ Resolve the value of a dnslink:
 		cmdkit.StringArg("name", false, false, "The IPNS name to resolve. Defaults to your node's peerID."),
 	},
 	Options: []cmdkit.Option{
-		cmdkit.BoolOption(recursiveOptionName, "r", "Resolve until the result is not an IPNS name."),
+		cmdkit.BoolOption(recursiveOptionName, "r", "Resolve until the result is not an IPNS name.").WithDefault(true),
 		cmdkit.BoolOption(nocacheOptionName, "n", "Do not use cached entries."),
 		cmdkit.UintOption(dhtRecordCountOptionName, "dhtrc", "Number of records to request for DHT resolution."),
 		cmdkit.StringOption(dhtTimeoutOptionName, "dhtt", "Max time to collect values during DHT resolution eg \"30s\". Pass 0 for no timeout."),
 		cmdkit.BoolOption(streamOptionName, "s", "Stream entries as they are found."),
 	},
 	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) error {
-		api, err := cmdenv.GetApi(env)
+		api, err := cmdenv.GetApi(env, req)
 		if err != nil {
 			return err
 		}
 
 		nocache, _ := req.Options["nocache"].(bool)
-		local, _ := req.Options["local"].(bool)
 
 		var name string
 		if len(req.Arguments) == 0 {
@@ -106,7 +105,6 @@ Resolve the value of a dnslink:
 		stream, _ := req.Options[streamOptionName].(bool)
 
 		opts := []options.NameResolveOption{
-			options.Name.Local(local),
 			options.Name.Cache(!nocache),
 		}
 
@@ -133,7 +131,7 @@ Resolve the value of a dnslink:
 
 		if !stream {
 			output, err := api.Name().Resolve(req.Context, name, opts...)
-			if err != nil {
+			if err != nil && (recursive || err != namesys.ErrResolveRecursion) {
 				return err
 			}
 
@@ -146,8 +144,8 @@ Resolve the value of a dnslink:
 		}
 
 		for v := range output {
-			if v.Err != nil {
-				return err
+			if v.Err != nil && (recursive || v.Err != namesys.ErrResolveRecursion) {
+				return v.Err
 			}
 			if err := res.Emit(&ResolvedPath{path.FromString(v.Path.String())}); err != nil {
 				return err
@@ -158,12 +156,8 @@ Resolve the value of a dnslink:
 		return nil
 	},
 	Encoders: cmds.EncoderMap{
-		cmds.Text: cmds.MakeEncoder(func(req *cmds.Request, w io.Writer, v interface{}) error {
-			output, ok := v.(*ResolvedPath)
-			if !ok {
-				return e.TypeErr(output, v)
-			}
-			_, err := fmt.Fprintln(w, output.Path)
+		cmds.Text: cmds.MakeTypedEncoder(func(req *cmds.Request, w io.Writer, rp *ResolvedPath) error {
+			_, err := fmt.Fprintln(w, rp.Path)
 			return err
 		}),
 	},

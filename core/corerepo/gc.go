@@ -10,10 +10,10 @@ import (
 	gc "github.com/elastos/Elastos.NET.Hive.IPFS/pin/gc"
 	repo "github.com/elastos/Elastos.NET.Hive.IPFS/repo"
 
-	humanize "gx/ipfs/QmPSBJL4momYnE7DcUyk2DVhD6rH488ZmHBGLbxNdhU44K/go-humanize"
-	cid "gx/ipfs/QmPSQnBKM9g7BaUcZCvswUJVscQ1ipjmwxN5PXCjkp9EQ7/go-cid"
-	mfs "gx/ipfs/QmUwXQs8aZ472DmXZ8uJNf7HJNKoMJQVa7RaCz7ujZ3ua9/go-mfs"
-	logging "gx/ipfs/QmZChCsSt8DctjceaL56Eibc29CVQq4dGKRXC5JRZ6Ppae/go-log"
+	humanize "github.com/dustin/go-humanize"
+	cid "github.com/ipfs/go-cid"
+	logging "github.com/ipfs/go-log"
+	mfs "github.com/ipfs/go-mfs"
 )
 
 var log = logging.Logger("corerepo")
@@ -40,11 +40,15 @@ func NewGC(n *core.IpfsNode) (*GC, error) {
 	// TODO: there should be a general check for all of the cfg fields
 	// maybe distinguish between user config file and default struct?
 	if cfg.Datastore.StorageMax == "" {
-		r.SetConfigKey("Datastore.StorageMax", "10GB")
+		if err := r.SetConfigKey("Datastore.StorageMax", "10GB"); err != nil {
+			return nil, err
+		}
 		cfg.Datastore.StorageMax = "10GB"
 	}
 	if cfg.Datastore.StorageGCWatermark == 0 {
-		r.SetConfigKey("Datastore.StorageGCWatermark", 90)
+		if err := r.SetConfigKey("Datastore.StorageGCWatermark", 90); err != nil {
+			return nil, err
+		}
 		cfg.Datastore.StorageGCWatermark = 90
 	}
 

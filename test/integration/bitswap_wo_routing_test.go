@@ -5,12 +5,12 @@ import (
 	"context"
 	"testing"
 
+	"github.com/ipfs/go-block-format"
 	"github.com/elastos/Elastos.NET.Hive.IPFS/core"
 	"github.com/elastos/Elastos.NET.Hive.IPFS/core/mock"
-	"gx/ipfs/QmRcHuYzAyswytBuMF78rj3LTChYszomRFXNg4685ZN1WM/go-block-format"
 
-	cid "gx/ipfs/QmPSQnBKM9g7BaUcZCvswUJVscQ1ipjmwxN5PXCjkp9EQ7/go-cid"
-	mocknet "gx/ipfs/QmUDTcnDp2WssbmiDLC6aYurUeyt7QeRakHUQMxA2mZ5iB/go-libp2p/p2p/net/mock"
+	cid "github.com/ipfs/go-cid"
+	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
 )
 
 func TestBitswapWithoutRouting(t *testing.T) {
@@ -35,7 +35,10 @@ func TestBitswapWithoutRouting(t *testing.T) {
 		nodes = append(nodes, n)
 	}
 
-	mn.LinkAll()
+	err := mn.LinkAll()
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// connect them
 	for _, n1 := range nodes {

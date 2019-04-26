@@ -3,8 +3,8 @@ package fsrepo
 import (
 	"os"
 
-	config "gx/ipfs/QmVFZsFtfRgn6hxEAyW5rDiuUYPpiCML4XHtz1p7LDsdon/go-ipfs-config"
-	homedir "gx/ipfs/QmdcULN1WCzgoQmcCaUAmEhwcxHYsDrbZ2LvRJKCL8dMrK/go-homedir"
+	config "github.com/elastos/Elastos.NET.Hive.IPFS.Config"
+	homedir "github.com/mitchellh/go-homedir"
 )
 
 // BestKnownPath returns the best known fsrepo path. If the ENV override is

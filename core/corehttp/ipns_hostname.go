@@ -8,9 +8,9 @@ import (
 
 	core "github.com/elastos/Elastos.NET.Hive.IPFS/core"
 	namesys "github.com/elastos/Elastos.NET.Hive.IPFS/namesys"
-	nsopts "github.com/elastos/Elastos.NET.Hive.IPFS/namesys/opts"
 
-	isd "gx/ipfs/QmZmmuAXgX73UQmX1jRKjTGmjzq24Jinqkq8vzkBtno4uX/go-is-domain"
+	nsopts "github.com/ipfs/interface-go-ipfs-core/options/namesys"
+	isd "github.com/jbenet/go-is-domain"
 )
 
 // IPNSHostnameOption rewrites an incoming request if its Host: header contains

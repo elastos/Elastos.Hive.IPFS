@@ -1,12 +1,18 @@
 # golang utilities
-GO_MIN_VERSION = 1.11
+GO_MIN_VERSION = 1.12
+export GO111MODULE=on
 
 
 # pre-definitions
 GOCC ?= go
 GOTAGS ?=
+unexport GOFLAGS
 GOFLAGS ?=
 GOTFLAGS ?=
+
+ifeq ($(tarball-is),1)
+	GOFLAGS += -mod=vendor
+endif
 
 # match Go's default GOPATH behaviour
 export GOPATH ?= $(shell $(GOCC) env GOPATH)
@@ -24,8 +30,12 @@ go-pkgs=$(shell $(GOCC) list github.com/elastos/Elastos.NET.Hive.IPFS/...)
 go-tags=$(if $(GOTAGS), -tags="$(call join-with,$(space),$(GOTAGS))")
 go-flags-with-tags=$(GOFLAGS)$(go-tags)
 
+define go-build-relative
+$(GOCC) build $(go-flags-with-tags) -o "$@" "$(call go-pkg-name,$<)"
+endef
+
 define go-build
-$(GOCC) build -i $(go-flags-with-tags) -o "$@" "$(call go-pkg-name,$<)"
+$(GOCC) build $(go-flags-with-tags) -o "$@" "$(1)"
 endef
 
 define go-try-build
@@ -61,14 +71,10 @@ test_go_megacheck:
 test_go: $(TEST_GO)
 
 check_go_version:
+	@go version
 	bin/check_go_version $(GO_MIN_VERSION)
 .PHONY: check_go_version
 DEPS_GO += check_go_version
-
-check_go_path:
-	GOPATH="$(GOPATH)" bin/check_go_path github.com/elastos/Elastos.NET.Hive.IPFS
-.PHONY: check_go_path
-DEPS_GO += check_go_path
 
 TEST += $(TEST_GO)
 TEST_SHORT += test_go_fmt test_go_short

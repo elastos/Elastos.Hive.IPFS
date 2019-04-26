@@ -10,11 +10,11 @@ import (
 	mock "github.com/elastos/Elastos.NET.Hive.IPFS/core/mock"
 	namesys "github.com/elastos/Elastos.NET.Hive.IPFS/namesys"
 	. "github.com/elastos/Elastos.NET.Hive.IPFS/namesys/republisher"
-	path "gx/ipfs/QmT3rzed1ppXefourpmoZ7tyVQfsGPQZ1pHDngLmCvXxd3/go-path"
+	path "github.com/ipfs/go-path"
 
-	goprocess "gx/ipfs/QmSF8fPo3jgVBAy8fpdjjYqgG87dkJgUprRBHRd2tmfgpP/goprocess"
-	pstore "gx/ipfs/QmTTJcDL3gsnGDALjh2fDGg1onGRUdVgNL2hU2WEZcVrMX/go-libp2p-peerstore"
-	mocknet "gx/ipfs/QmUDTcnDp2WssbmiDLC6aYurUeyt7QeRakHUQMxA2mZ5iB/go-libp2p/p2p/net/mock"
+	goprocess "github.com/jbenet/goprocess"
+	pstore "github.com/libp2p/go-libp2p-peerstore"
+	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
 )
 
 func TestRepublish(t *testing.T) {
@@ -41,7 +41,9 @@ func TestRepublish(t *testing.T) {
 		nodes = append(nodes, nd)
 	}
 
-	mn.LinkAll()
+	if err := mn.LinkAll(); err != nil {
+		t.Fatal(err)
+	}
 
 	bsinf := core.BootstrapConfigWithPeers(
 		[]pstore.PeerInfo{

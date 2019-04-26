@@ -8,15 +8,15 @@ import (
 	"testing"
 	"time"
 
+	"bazil.org/fuse"
+
 	"context"
 
 	core "github.com/elastos/Elastos.NET.Hive.IPFS/core"
 	ipns "github.com/elastos/Elastos.NET.Hive.IPFS/fuse/ipns"
 	mount "github.com/elastos/Elastos.NET.Hive.IPFS/fuse/mount"
-	namesys "github.com/elastos/Elastos.NET.Hive.IPFS/namesys"
 
-	ci "gx/ipfs/Qma6ESRQTf1ZLPgzpCwDTqQJefPnU6uLvMjP18vK8EWp8L/go-testutil/ci"
-	offroute "gx/ipfs/QmcjvUP25nLSwELgUeqWe854S3XVbtsntTr7kZxG63yKhe/go-ipfs-routing/offline"
+	ci "github.com/libp2p/go-testutil/ci"
 )
 
 func maybeSkipFuseTests(t *testing.T) {
@@ -46,14 +46,6 @@ func TestExternalUnmount(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = node.LoadPrivateKey()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	node.Routing = offroute.NewOfflineRouter(node.Repo.Datastore(), node.RecordValidator)
-	node.Namesys = namesys.NewNameSystem(node.Routing, node.Repo.Datastore(), 0)
-
 	err = ipns.InitializeKeyspace(node, node.PrivateKey)
 	if err != nil {
 		t.Fatal(err)
@@ -71,8 +63,11 @@ func TestExternalUnmount(t *testing.T) {
 	mkdir(t, ipnsDir)
 
 	err = Mount(node, ipfsDir, ipnsDir)
+	if _, ok := err.(errNeedFuseVersion); ok || err == fuse.ErrOSXFUSENotFound {
+		t.Skip(err)
+	}
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("error mounting: %v", err)
 	}
 
 	// Run shell command to externally unmount the directory

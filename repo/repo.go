@@ -7,9 +7,9 @@ import (
 	filestore "github.com/elastos/Elastos.NET.Hive.IPFS/filestore"
 	keystore "github.com/elastos/Elastos.NET.Hive.IPFS/keystore"
 
-	ma "gx/ipfs/QmT4U94DnD8FRfqr21obWY32HLM5VExccPKMjQHofeYqr9/go-multiaddr"
-	config "gx/ipfs/QmVFZsFtfRgn6hxEAyW5rDiuUYPpiCML4XHtz1p7LDsdon/go-ipfs-config"
-	ds "gx/ipfs/QmaRb5yNXKonhbkpNxNawoydk4N6es6b4fPj19sjEKsh5D/go-datastore"
+	ds "github.com/ipfs/go-datastore"
+	config "github.com/elastos/Elastos.NET.Hive.IPFS.Config"
+	ma "github.com/multiformats/go-multiaddr"
 )
 
 var (
@@ -59,6 +59,5 @@ type Repo interface {
 // Datastore is the interface required from a datastore to be
 // acceptable to FSRepo.
 type Datastore interface {
-	ds.Batching // should be threadsafe, just be careful
-	io.Closer
+	ds.Batching // must be thread-safe
 }
