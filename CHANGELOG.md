@@ -1,3 +1,9 @@
+2019/04/30 Wang Yi wangyi@@storswift.com
+
+**Version 0.1.1**, main feature list:
+
+- fix bug of the cluster side's name publish API.
+
 2019/04/26 Wang Yi wangyi@@storswift.com
 
 **Version 0.1**, main feature list:
