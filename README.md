@@ -183,7 +183,8 @@ See `ipfs init --help` for more information on the optional arguments it takes.
 As to Hive project, you need to connect to private IPFS network by reconfiguring bootstrap list with the following commands:
 
 ```shell
-$ ipfs bootstrap rm --all
+$ ipfs bootstrap rm --all //remove all existing bootstraps
+$ ipfs id //get your bootstrap ip and nodeid (hash)
 $ ipfs bootstrap add /ip4/YOUR-BOOTSTRAP-IP/tcp/4001/ipfs/YOUR-BOOTSTRAP-NODEID
 ```
 
