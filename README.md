@@ -183,7 +183,8 @@ See `ipfs init --help` for more information on the optional arguments it takes.
 As to Hive project, you need to connect to private IPFS network by reconfiguring bootstrap list with the following commands:
 
 ```shell
-$ ipfs bootstrap rm --all
+$ ipfs bootstrap rm --all //remove all existing bootstraps
+$ ipfs id //get your bootstrap ip and nodeid (hash)
 $ ipfs bootstrap add /ip4/YOUR-BOOTSTRAP-IP/tcp/4001/ipfs/YOUR-BOOTSTRAP-NODEID
 ```
 
@@ -191,9 +192,17 @@ $ ipfs bootstrap add /ip4/YOUR-BOOTSTRAP-IP/tcp/4001/ipfs/YOUR-BOOTSTRAP-NODEID
 
 In general IPFS,  IPFS swarm is the network of peers connection. There is a swarm key(swarm.key file) that could be shared by the network. If IPFS daemon does not locate the swarm.key file, it will connect to global IPFS network. Otherwise, with swarm key,  the IPFS daemon will try to use it to connect a private secret network.
 
+#### Option 1: Generate key via Go based package
 ```
 $ go get -u github.com/Kubuxu/go-ipfs-swarm-key-gen/ipfs-swarm-key-gen
 $ ipfs-swarm-key-gen > swarm.key
+$ cp swarm.key $HOME/.ipfs
+```
+
+#### Option 2: Generate key via Python package
+```
+$ pip install piskg
+$ piskg > swarm.key
 $ cp swarm.key $HOME/.ipfs
 ```
 
